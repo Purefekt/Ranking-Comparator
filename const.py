@@ -1,0 +1,1 @@
+EXPEDIA_SEARCH_URL = 'https://www.expedia.com/Hotel-Search?'
