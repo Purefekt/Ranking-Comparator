@@ -1,7 +1,8 @@
 import datetime
 
 from requester import *
-from expedia_scrapper import fetch_rankings
+from expedia_scrapper import fetch_rankings as ex_fetch_rankings
+from booking_scrapper import fetch_rankings as bk_fetch_rankings
 
 # This client code can run on Python 2.x or 3.x.  Your imports can be
 # simpler if you only need one of those.
@@ -28,11 +29,13 @@ def main():
 
     try:
         today = datetime.date.today()
-        fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
+        # ex_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
+        bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
+
         return
         for i in range(30):
             print(str(today) + "   " + str(datetime.timedelta(days=i)))
-            fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
+            ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
 
     except HTTPError as error:
         sys.exit(

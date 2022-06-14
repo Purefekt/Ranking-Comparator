@@ -21,7 +21,7 @@ with open("conf.yaml", 'r') as stream:
 proxy_url = "http://" + SP_USER + ":" + SP_PWD + "@149.28.81.160:20000"
 
 
-def generic_request(host, path, url_params=None, with_token=False, with_proxy=True):
+def generic_request(host, path, url_params=None, with_proxy=True):
     """Given your API_KEY, send a GET request to the API.
     Args:
         host (str): The domain host of the API.
@@ -36,8 +36,6 @@ def generic_request(host, path, url_params=None, with_token=False, with_proxy=Tr
     url_params = url_params or {}
     headers = {}
     url = '{0}{1}'.format(host, quote(path.encode('utf8')))
-    if with_token:
-        headers['Authorization'] = 'Bearer %s' % get_random_api_key()
 
     logger.info(u'Querying {0} ...'.format(url))
     logger.info("Params: " + str(url_params))
@@ -85,9 +83,5 @@ def generic_request(host, path, url_params=None, with_token=False, with_proxy=Tr
         # time.sleep(0.2)
 
 
-def request_json(host, path, url_params=None, with_token=False, with_proxy=False):
-    return generic_request(host, path, url_params, with_token, with_proxy).json()
-
-
-def get_random_api_key():
-    return ACCESS_TOKEN[random.randint(0, len(ACCESS_TOKEN) - 1)]['api_key']
+def request_json(host, path, url_params=None, with_proxy=False):
+    return generic_request(host, path, url_params, with_proxy).json()

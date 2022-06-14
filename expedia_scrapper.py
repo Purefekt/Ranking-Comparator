@@ -38,28 +38,27 @@ def fetch_rankings(start_date, end_date):
 		driver.get(url)
 		time.sleep(7)
 
-		# driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
-		# time.sleep(5)
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
+		time.sleep(5)
 
-		# driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-		# time.sleep(5)
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+		time.sleep(5)
 
-		# next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
-		# if next_page_button.is_enabled():
-		# 	print("here:")
-		# 	next_page_button.click()
-		# 	time.sleep(10)
+		next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
+		if next_page_button.is_enabled():
+			print("here:")
+			next_page_button.click()
+			time.sleep(10)
 
-		# driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
-		# time.sleep(5)
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
+		time.sleep(5)
 
-		# driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-		# time.sleep(5)
+		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+		time.sleep(5)
 
 		listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 		logger.info("Found listing: " + str(len(listings)))
-		print("Found listing: " + str(len(listings)))
-		ads = 0
+		print("Found listings: " + str(len(listings)))
 		i = 0
 		for li in listings:
 			if i == 0:
@@ -68,7 +67,7 @@ def fetch_rankings(start_date, end_date):
 			name_element = li.find_elements(By.CSS_SELECTOR, "li > h3")
 			photo_gallery = li.find_elements(By.CSS_SELECTOR, ".uitk-image-media")
 			access = li.find_elements(By.CSS_SELECTOR, ".uitk-badge-vip")
-			nbh_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div")
+			# nbh_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div")
 			review_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.uitk-layout-grid-item-columnspan > div > div.uitk-layout-grid.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div > span:nth-child(1) ")
 			comment_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div.listing__reviews.all-t-margin-two > div > span:nth-child(1) > span.uitk-type-300.pwa-theme--grey-700.all-r-padding-one")
 			review_count_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div.listing__reviews.all-t-margin-two > div > span:nth-child(1) > span.pwa-theme--grey-700[data-stid='content-hotel-reviews-total']")
@@ -80,6 +79,7 @@ def fetch_rankings(start_date, end_date):
 			old_price_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-1.uitk-layout-grid-item-justify-self-end > div > div > div:nth-child(1) > button > div > div > del > span")
 
 			info_array = li.text.splitlines()
+
 			# Removing excess info
 			for a in info_array:
 				if a.startswith("Photo gallery"):
@@ -99,17 +99,22 @@ def fetch_rankings(start_date, end_date):
 					break
 
 			listing = {
+				'hotel_id': None,
+				'name': None,
 				'nbh': None,
 				'rating': None,
 				'comment': None,
 				'review_count': None,
-				'original_price': None,
 				'full_review': None,
+				'original_price': None,
 				'price': None,
 				'total_price': None,
 				'url': None,
 				'conflict': False,
-				'sponsored': False
+				'sponsored': False,
+				'vip_access': None,
+				'url': None,
+				'amenities': None
 			}
 
 			# Name of the hotel
@@ -122,69 +127,99 @@ def fetch_rankings(start_date, end_date):
 			# Photo Gallery
 			listing['photos'] = [photo.get_attribute("src") for photo in photo_gallery]
 
+			# VIP Access
 			listing['vip_access'] = None
 			if(len(access) == 1):
 				listing['vip_access'] = access[0].text
+			for a in info_array:
+				if a == 'VIP Access':
+					listing['vip_access'] = a
+					info_array.remove(a)
+					break
 
-			for n in nbh_element:
-				listing['nbh'] = n.text
+			# URL
+			for u in urls_element:
+				listing['url'] = u.get_attribute("href")
+
+			# Badges
+			listing['badges'] = [badge.text for badge in badge_element]
+			if 'Ad' in listing['badges']:
+				listing['sponsored'] = True
+				listing['badges'].remove('Ad')
+			for a in info_array:
+				if a == 'Ad':
+					listing['sponsored'] = True
+					info_array.remove(a)
+					break
+			info_array = list(filter(lambda a: a not in listing['badges'], info_array))
+
+			# Price
+			for op in old_price_element:
+				listing['original_price'] = op.text
+			for a in info_array:
+				if a.startswith("The price was"):
+					tmp = a[14:]
+					listing['original_price'] = compare(listing['original_price'], tmp, listing)
+					info_array.remove(a)
+					info_array.remove(tmp)
+					break
+			for p in price_element:
+				listing['price'] = p.text
+			for a in info_array:
+				if a.startswith("The price is"):
+					tmp = a[13:]
+					listing['price'] = compare(listing['price'], tmp, listing)
+					info_array.remove(a)
+					info_array.remove(tmp)
+					break
+			for tp in total_price_element:
+				listing['total_price'] = tp.text[:-6]
+			for a in info_array:
+				if a.endswith("total") and a.startswith("$"):
+					tmp = a[:-6]
+					listing['total_price'] = compare(listing['total_price'], tmp, listing)
+					info_array.remove(a)
+					break
+
+			# Review
 			if(len(review_element) > 0):
 				listing['rating'] = review_element[0].text
 			if(len(comment_element) > 0):
 				listing['comment'] = comment_element[0].text
 			if(len(review_count_element) > 0):
-				listing['review_count'] = review_count_element[0].text
+				listing['review_count'] = int(review_count_element[0].text[1:-9].replace(',', ''))
 			if(len(full_review_element) > 0):
 				listing['full_review'] = full_review_element[0].text
-
-			# Price
-			for op in old_price_element:
-				listing['original_price'] = op.text
-			tmp = None
-			for p in price_element:
-				listing['price'] = p.text
 			for a in info_array:
-				if a.startswith("The price is"):
-					# tmp =
+				if a.endswith("reviews)") and "out of 5" in a:
+					listing['rating'] = compare(listing['rating'], a[:a.index(" out of 5")] + '/5', listing)
+					listing['comment'] = compare(listing['comment'], a[a.index(" out of 5") + 9:a.index('(') - 1], listing)
+					listing['review_count'] = compare(listing['review_count'], int(a[a.index('(') + 1:a.index(' reviews)')].replace(',', '')), listing)
+					listing['full_review'] = compare(listing['full_review'], a, listing)
 					info_array.remove(a)
-					break
-			for tp in total_price_element:
-				listing['total_price'] = tp.text
-			tmp = None
-			for a in info_array:
-				if a.endswith("total") and a.startswith("$"):
-					tmp = a
-					info_array.remove(a)
-					break
-			listing['total_price'] = (compare(listing['total_price'], tmp, listing))[:-6]
+					info_array.remove(a.replace(' 5 ', ' 5').replace(' out of ', '/').replace(' (', '('))
 
-			listing['badges'] = [badge.text for badge in badge_element]
-			if 'Ad' in listing['badges']:
-				listing['sponsored'] = True
+			listing['nbh'] = info_array[0]
+			info_array.pop(0)
+			listing['amenities'] = info_array
 
-			for u in urls_element:
-				listing['url'] = u.get_attribute("href")
+			listing['full_text'] = li.text
 
 			logger.info("Hotel name: " + listing['name'])
 			logger.info(listing)
-			print("entering hotel: " + listing['name'])
-			print(info_array)
 
-			# for line in li.text.splitlines():
-			# 	print(line)
-			time.sleep(1000)
-			return
-			key = (listing['name'] + " " + loc[0] + " " + str(listing['nbh'])).encode()
-			hotel_id = hashlib.md5(key).hexdigest()
-			if not connector.does_expedia_hotel_exist(hotel_id):
-				connector.enter_expedia_hotel(hotel_id, listing)
-				connector.enter_expedia_hotel_photos(hotel_id, listing['photos'])
+			key = (listing['name'] + " " + loc[0] + " " + listing['nbh']).encode()
+			listing['hotel_id'] = hashlib.md5(key).hexdigest()
+
+			print(listing['name'])
+			print(listing['hotel_id'])
+			if not connector.does_expedia_hotel_exist(listing['hotel_id']):
+				connector.enter_expedia_hotel(listing, loc[0])
+				connector.enter_expedia_hotel_photos(listing['hotel_id'], listing['photos'])
 			else:
-				print("Hotel already exists. Please check. " + str(listing))
-			connector.enter_expedia_hotel_ranking(hotel_id, i, start_date, end_date, loc[0])
+				print("Hotel already exists. Please check. ")
+				connector.update_expedia_hotel(listing)
+			connector.enter_expedia_hotel_ranking(listing, i, start_date, end_date, loc[0])
 			i = i + 1
-		logger.info("Ads found: " + str(ads))
 		logger.info("First Location complete.")
-		print("Ads found: " + ads)
 		print("First Location complete.")
-
