@@ -31,11 +31,18 @@ def main():
         today = datetime.date.today()
         # ex_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
         bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
-
         return
+
         for i in range(30):
+            print("-----------------------------")
+            print("-----------------------------")
+            print("-----------------------------")
+            print("DATE CHANGE")
+            print("DATE CHANGE")
             print(str(today) + "   " + str(datetime.timedelta(days=i)))
             ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
+            print("-----------------------------")
+            bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
 
     except HTTPError as error:
         sys.exit(

@@ -74,14 +74,16 @@ class Connector():
     def enter_booking_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location):
         sql = 'INSERT INTO booking_hotel_rankings ( run_date, search_start_date, search_end_date, rank, hotel_id, location, '\
             ' location_addon, discounted_price, original_price, rating, comment, review_count, sponsored, badges, '\
-            ' recommended_unit, recommended_unit_beds, availability, occupancy) '\
-            ' SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
+            ' recommended_unit, recommended_unit_beds, availability, occupancy, external_rating, external_comment, external_review_count) '\
+            ' SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
 
         val = [
             datetime.date.today(), search_start_date, search_end_date, rank, listing['hotel_id'], location,
             listing['location_addon'], listing['discounted_price'], listing['original_price'], listing['rating'], listing['comment'],
             listing['review_count'], listing['sponsored'], str(listing['badges']),
-            listing['recommended_unit'], listing['recommended_unit_beds'], listing['availability'], listing['occupancy']
+            listing['recommended_unit'], listing['recommended_unit_beds'], listing['availability'], listing['occupancy'],
+            listing['external_rating'], listing['external_comment'],
+            listing['external_review_count'],
         ]
 
         self.connection.cursor().execute(sql, val)
