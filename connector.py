@@ -53,7 +53,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "select destination, dest_id, dest_type, iata from booking_locations"
+        sql = "select destination, dest_id, dest_type, iata from booking_locations where iata = 'HOU'"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])

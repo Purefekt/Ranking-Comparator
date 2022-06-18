@@ -10,11 +10,12 @@ from selenium.webdriver.common.by import By
 import hashlib
 import os
 import time
+import datetime
 from urllib.parse import urlencode
 
-from requester import generic_request
+# from requester import generic_request
 from connector import connector
-from const import BOOKING_SEARCH_URL
+from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR
 from logger import logger
 from utils import *
 
@@ -36,13 +37,15 @@ def fetch_rankings(start_date, end_date):
 		locations = connector.get_booking_locations()
 		for loc in locations:
 			logger.info("Checking location: " + loc[0])
+			print()
 			print("Checking location: " + loc[0])
 			query["ss"] = loc[0]
 			query["dest_id"] = loc[1]
 			query["dest_type"] = loc[2]
 
-			limit = 200
+			limit = 500
 			offset = 0
+			page = 1
 			i = 1
 
 			while offset < limit:
@@ -66,18 +69,19 @@ def fetch_rankings(start_date, end_date):
 				chrome_driver = os.environ.get('CHROME_DRIVER')
 				driver = webdriver.Chrome(executable_path=chrome_driver)
 				driver.get(url)
-				time.sleep(7)
-
-				save_raw_file(driver.page_source, 'res.html')
-				return
+				time.sleep(6)
 
 				driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-				time.sleep(5)
+				time.sleep(1)
+
+				save_raw_file(driver.page_source, BOOKING_RAW_DIR + loc[0] + '/' + 'RUNDATE_' + str(datetime.date.today()) + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 
 				total_listing = driver.find_elements(By.XPATH, "//h1")
 				if len(total_listing) > 0:
 					ct = total_listing[0].text
-					limit = min(limit, int(ct[ct.index(':') + 2:-17].replace(',', '')))
+					limit = int(ct[ct.index(':') + 2:-17].replace(',', ''))
+					logger.info('Total listings' + str(limit))
+					print('Total listings' + str(limit))
 
 				listings = driver.find_elements(By.XPATH, "//div[@data-testid='property-card']")
 				logger.info("Found listing: " + str(len(listings)))
@@ -168,10 +172,6 @@ def fetch_rankings(start_date, end_date):
 								listing['external_review_count'] = listing['external_review_count'][:-17].replace(',', '')
 							else:
 								listing['external_review_count'] = listing['external_review_count'][:-16].replace(',', '')
-							print('huluuuuu')
-							print(listing['external_comment'])
-							print(listing['external_rating'])
-							print(listing['external_review_count'])
 
 					rec_unit = li.find_elements(By.CSS_SELECTOR, "div[data-testid='recommended-units']")[0]
 					listing['recommended-unit'] = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(1) > span")[0].text
@@ -209,17 +209,20 @@ def fetch_rankings(start_date, end_date):
 						connector.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
 					else:
 						logger.info("Hotel already exists. Please check. " + listing['name'])
-						print("Hotel already exists. Please check. " + listing['name'])
+						print("################# Hotel already exists. Please check. " + listing['name'])
 						connector.update_booking_hotel(listing)
 					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0])
 					logger.info("Completed listing: " + listing['name'])
 					i = i + 1
 				offset = offset + 25
+				page = page + 1
 			logger.info("First Location complete.")
 			print("First Location complete.")
+			print()
+			print()
 	except:
-		print(listing)
-		print(li.text)
+		# print(listing)
+		# print(li.text)
 		print('\a')
 		print('\a')
 		print('\a')

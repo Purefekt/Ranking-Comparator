@@ -13,7 +13,7 @@ import time
 from urllib.parse import urlencode
 
 from connector import connector
-from const import EXPEDIA_SEARCH_URL
+from const import EXPEDIA_SEARCH_URL, EXPEDIA_RAW_DIR
 from logger import logger
 from utils import *
 
@@ -58,6 +58,8 @@ def fetch_rankings(start_date, end_date):
 
 			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 			time.sleep(5)
+
+			save_raw_file(driver.page_source, EXPEDIA_RAW_DIR + loc[0] + '/' + str(datetime.date.today()) + '/', 'page.html.gz')
 
 			listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 			logger.info("Found listing: " + str(len(listings)))
@@ -240,6 +242,8 @@ def fetch_rankings(start_date, end_date):
 			logger.info("First Location complete.")
 			print("First Location complete.")
 	except:
+		print(listing['name'])
+		print(listing)
 		print('\a')
 		print('\a')
 		print('\a')

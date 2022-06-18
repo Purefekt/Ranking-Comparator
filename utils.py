@@ -1,4 +1,7 @@
+import os
+import gzip
 
+from logger import logger
 
 def compare(first, second, listing):
 	if second is None:
@@ -11,7 +14,13 @@ def compare(first, second, listing):
 	return first
 
 
-def save_raw_file(content, name):
-	with open(name, 'w') as f:
-		f.write(content)
-	f.close
+def save_raw_file(content, dir, name):
+	if not os.path.isdir(dir):
+		logger.info('Creating dir ' + dir)
+		os.makedirs(dir)
+	try:
+		with gzip.open(dir + name, 'wt') as f:
+			f.write(content)
+			logger.info('Saved file ' + dir + ' ' + name)
+	finally:
+		f.close

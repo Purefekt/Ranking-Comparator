@@ -30,18 +30,32 @@ def main():
     try:
         today = datetime.date.today()
         # ex_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
-        bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
-        return
+        # bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
+        # return
 
-        for i in range(30):
+        for i in range(4, 30):
+            print()
+            print()
+            print()
+            print()
+            print()
+            print()
             print("-----------------------------")
             print("-----------------------------")
-            print("-----------------------------")
-            print("DATE CHANGE")
             print("DATE CHANGE")
             print(str(today) + "   " + str(datetime.timedelta(days=i)))
-            ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
+            logger.info("DATE: " + str(today) + "   " + str(datetime.timedelta(days=i)))
+            print()
             print("-----------------------------")
+            print("-----------------------------")
+            print("EXPEDIA")
+            logger.info("EXPEDIA")
+            # ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
+            print()
+            print("-----------------------------")
+            print("-----------------------------")
+            print("BOOKING")
+            logger.info("BOOKING")
             bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
 
     except HTTPError as error:
