@@ -44,9 +44,9 @@ def fetch_rankings(start_date, end_date):
 			query["dest_type"] = loc[2]
 
 			limit = 500
-			offset = 0
-			page = 1
-			i = 1
+			offset = 125
+			page = 6
+			i = 126
 
 			while offset < limit:
 				query["offset"] = offset
@@ -200,15 +200,15 @@ def fetch_rankings(start_date, end_date):
 					key = (listing['name'] + " " + loc[0] + " " + listing['locality']).encode()
 					listing['hotel_id'] = hashlib.md5(key).hexdigest()
 
-					logger.info("Hotel name: " + listing['name'])
+					# logger.info("Hotel name: " + listing['name'])
 					print(listing['name'])
-					logger.info(listing)
+					# logger.info(listing)
 
 					if not connector.does_booking_hotel_exist(listing['hotel_id']):
 						connector.enter_booking_hotel(listing, loc[0])
 						connector.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
 					else:
-						logger.info("Hotel already exists. Please check. " + listing['name'])
+						# logger.info("Hotel already exists. Please check. " + listing['name'])
 						print("################# Hotel already exists. Please check. " + listing['name'])
 						connector.update_booking_hotel(listing)
 					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0])
