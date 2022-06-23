@@ -3,6 +3,7 @@ import datetime
 from requester import *
 from expedia_scrapper import fetch_rankings as ex_fetch_rankings
 from booking_scrapper import fetch_rankings as bk_fetch_rankings
+from utils import send_raw_file
 
 # This client code can run on Python 2.x or 3.x.  Your imports can be
 # simpler if you only need one of those.
@@ -20,6 +21,8 @@ connector = None
 
 
 def main():
+    # send_raw_file("A", 'RUNDATE_' + str(datetime.date.today()) + '/', 'page.html.gz')
+    # return
     # parser = argparse.ArgumentParser()
 
     # parser.add_argument('-b', '--businesses', dest='businesses', default=False,
@@ -50,7 +53,7 @@ def main():
             print("-----------------------------")
             print("EXPEDIA")
             logger.info("EXPEDIA")
-            # ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
+            ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1))
             print()
             print("-----------------------------")
             print("-----------------------------")

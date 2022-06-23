@@ -3,13 +3,14 @@ from selenium import webdriver
 # from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 # from selenium.webdriver.common.keys import Keys
-# from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Options
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
 
 import hashlib
 import os
 import time
+import datetime
 from urllib.parse import urlencode
 
 from connector import connector
@@ -34,33 +35,44 @@ def fetch_rankings(start_date, end_date):
 			query["regionId"] = loc[1]
 
 			chrome_driver = os.environ.get('CHROME_DRIVER')
-			driver = webdriver.Chrome(executable_path=chrome_driver)
+			opts = Options()
+			opts.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
+			opts.add_argument("--incognito")
+			driver = webdriver.Chrome(executable_path=chrome_driver, chrome_options=opts)
+			# driver = webdriver.Safari()
+			# driver = webdriver.Firefox(executable_path="./../geckodriver")
 			url = EXPEDIA_SEARCH_URL + urlencode(query)
 			logger.info("URl: " + url)
 			print(url)
 			driver.get(url)
-			time.sleep(7)
+			time.sleep(6)
+			driver.set_window_size(width=1200, height=831)
 
 			driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
-			time.sleep(5)
+			time.sleep(1)
 
 			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			time.sleep(5)
+			time.sleep(2)
 
-			next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
-			if next_page_button.is_enabled():
-				print("here:")
-				next_page_button.click()
-				time.sleep(10)
+			# while driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary'):
 
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
-			time.sleep(5)
+			# 	listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
+			# 	print("Found listings: " + str(len(listings)))
+			# 	next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
+			# 	if next_page_button.is_enabled():
+			# 		next_page_button.click()
+			# 		time.sleep(5)
 
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			time.sleep(5)
+			# 	driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+			# 	time.sleep(2)
 
-			save_raw_file(driver.page_source, EXPEDIA_RAW_DIR + loc[0] + '/' + str(datetime.date.today()) + '/', 'page.html.gz')
+			# 	driver.set_window_size(width=800, height=831)
+			# 	driver.set_window_size(width=1200, height=831)
+			# 	time.sleep(5)
 
+			# save_raw_file(driver.page_source, 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/', 'page.html.gz')
+			send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
+			return
 			listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 			logger.info("Found listing: " + str(len(listings)))
 			print("Found listings: " + str(len(listings)))
@@ -102,9 +114,6 @@ def fetch_rankings(start_date, end_date):
 					if a.startswith('More information about'):
 						info_array.remove(a)
 						break
-
-				logger.info("RANK " + i)
-				logger.info("Checking hotel: " + str(info_array))
 
 				listing = {
 					'hotel_id': None,
@@ -223,8 +232,10 @@ def fetch_rankings(start_date, end_date):
 				key = (listing['name'] + " " + loc[0] + " " + listing['nbh']).encode()
 				listing['hotel_id'] = hashlib.md5(key).hexdigest()
 
+				logger.info("RANK " + str(i))
 				logger.info("Hotel name: " + listing['name'])
-				logger.info(listing)
+				print(listing['name'])
+				# logger.info(listing)
 
 				if not connector.does_expedia_hotel_exist(listing['hotel_id']):
 					connector.enter_expedia_hotel(listing, loc[0])
@@ -253,4 +264,3 @@ def fetch_rankings(start_date, end_date):
 		logger.info(str(info_array))
 		logger.error("Error occured")
 		logger.exception("Exception: ")
-		time.sleep(10000)

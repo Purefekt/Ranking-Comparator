@@ -30,11 +30,13 @@ class Connector():
                 host=host_name,
                 user=user_name,
                 passwd=user_password,
-                database=db_name
+                database=db_name,
+                port=3306
             )
             logger.info("Connection to MySQL DB successful")
         except Error as e:
-            logger.info("The error " + str(e) + " occurred")
+            logger.error("The error " + str(e) + " occurred")
+            logger.exception("Exception: ")
         return self.connection
 
     def close(self):

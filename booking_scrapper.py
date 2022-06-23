@@ -15,7 +15,7 @@ from urllib.parse import urlencode
 
 # from requester import generic_request
 from connector import connector
-from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR
+from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR, REMOTE_PARENT_DIR
 from logger import logger
 from utils import *
 
@@ -68,13 +68,18 @@ def fetch_rankings(start_date, end_date):
 
 				chrome_driver = os.environ.get('CHROME_DRIVER')
 				driver = webdriver.Chrome(executable_path=chrome_driver)
+				# driver = webdriver.Safari()
+				# driver = webdriver.Firefox(executable_path="./../geckodriver")
+
 				driver.get(url)
 				time.sleep(6)
 
 				driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 				time.sleep(1)
 
-				save_raw_file(driver.page_source, BOOKING_RAW_DIR + loc[0] + '/' + 'RUNDATE_' + str(datetime.date.today()) + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+				# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+				send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+				return
 
 				total_listing = driver.find_elements(By.XPATH, "//h1")
 				if len(total_listing) > 0:
