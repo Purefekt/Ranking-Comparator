@@ -10,7 +10,6 @@ from selenium.webdriver.chrome.options import Options
 import hashlib
 import os
 import time
-import datetime
 from urllib.parse import urlencode
 
 from connector import connector
@@ -19,7 +18,7 @@ from logger import logger
 from utils import *
 
 
-def fetch_rankings(start_date, end_date):
+def fetch_rankings(start_date, end_date, today):
 	try:
 		listing = None
 		info_array = None
@@ -54,6 +53,20 @@ def fetch_rankings(start_date, end_date):
 			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 			time.sleep(2)
 
+			try:
+				while driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary'):
+					next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
+					if next_page_button.is_enabled():
+						next_page_button.click()
+						time.sleep(5)
+
+					driver.execute_script("window.scrollTo(0, document.body.scrollHeight*0.5);")
+					time.sleep(1)
+					driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+					time.sleep(2)
+			except:
+				pass
+
 			# while driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary'):
 
 			# 	listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
@@ -71,8 +84,8 @@ def fetch_rankings(start_date, end_date):
 			# 	time.sleep(5)
 
 			# save_raw_file(driver.page_source, 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/', 'page.html.gz')
-			send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
-			return
+			send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
+
 			listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 			logger.info("Found listing: " + str(len(listings)))
 			print("Found listings: " + str(len(listings)))
@@ -223,13 +236,14 @@ def fetch_rankings(start_date, end_date):
 						info_array.remove(a)
 						info_array.remove(a.replace(' 5 ', ' 5').replace(' out of ', '/').replace(' (', '('))
 
-				listing['nbh'] = info_array[0]
-				info_array.pop(0)
+				if len(info_array) > 0:
+					listing['nbh'] = info_array[0]
+					info_array.pop(0)
 				listing['amenities'] = info_array
 
 				listing['full_text'] = li.text
 
-				key = (listing['name'] + " " + loc[0] + " " + listing['nbh']).encode()
+				key = (listing['name'] + " " + loc[0] + " " + str(listing['nbh'])).encode()
 				listing['hotel_id'] = hashlib.md5(key).hexdigest()
 
 				logger.info("RANK " + str(i))
@@ -245,11 +259,8 @@ def fetch_rankings(start_date, end_date):
 
 					print("Hotel already exists. Please check. " + listing['name'])
 					connector.update_expedia_hotel(listing)
-				connector.enter_expedia_hotel_ranking(listing, i, start_date, end_date, loc[0])
+				connector.enter_expedia_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
 				i = i + 1
-				logger.info("=======================================")
-				logger.info("=======================================")
-				logger.info("=======================================")
 			logger.info("First Location complete.")
 			print("First Location complete.")
 	except:
@@ -262,5 +273,6 @@ def fetch_rankings(start_date, end_date):
 		print('\a')
 		logger.info(str(listing))
 		logger.info(str(info_array))
-		logger.error("Error occured")
+		logger.error("Expedia Error occured")
 		logger.exception("Exception: ")
+		raise

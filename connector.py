@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import yaml
 import argparse
-import datetime
+from datetime import datetime
 from logger import logger
 
 
@@ -42,20 +42,20 @@ class Connector():
     def close(self):
         self.connection.close()
 
-    def clean_db(self):
+    def clean_db(self, run_date, location):
         logger.info('Cleaning')
 
         cursor = self.connection.cursor()
-        cursor.execute('DELETE FROM expedia_hotels')
-        cursor.execute('DELETE FROM expedia_photos')
-        cursor.execute('DELETE FROM expedia_hotel_rankings')
-        cursor.execute('DELETE FROM booking_hotels')
-        cursor.execute('DELETE FROM booking_photos')
-        cursor.execute('DELETE FROM booking_hotel_rankings')
+        # cursor.execute('DELETE FROM expedia_hotels')
+        # cursor.execute('DELETE FROM expedia_photos')
+        cursor.execute('DELETE FROM expedia_hotel_rankings where search_start_date = %s and location = %s', [run_date, location])
+        # cursor.execute('DELETE FROM booking_hotels')
+        # cursor.execute('DELETE FROM booking_photos')
+        # cursor.execute('DELETE FROM booking_hotel_rankings where run_date = %s', [run_date])
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata = 'MIL'"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -73,14 +73,14 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
-    def enter_booking_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location):
+    def enter_booking_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location, today):
         sql = 'INSERT INTO booking_hotel_rankings ( run_date, search_start_date, search_end_date, rank, hotel_id, location, '\
             ' location_addon, discounted_price, original_price, rating, comment, review_count, sponsored, badges, '\
             ' recommended_unit, recommended_unit_beds, availability, occupancy, external_rating, external_comment, external_review_count) '\
             ' SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
 
         val = [
-            datetime.date.today(), search_start_date, search_end_date, rank, listing['hotel_id'], location,
+            today, search_start_date, search_end_date, rank, listing['hotel_id'], location,
             listing['location_addon'], listing['discounted_price'], listing['original_price'], listing['rating'], listing['comment'],
             listing['review_count'], listing['sponsored'], str(listing['badges']),
             listing['recommended_unit'], listing['recommended_unit_beds'], listing['availability'], listing['occupancy'],
@@ -152,13 +152,13 @@ class Connector():
             self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
-    def enter_expedia_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location):
+    def enter_expedia_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location, today):
         sql = 'INSERT INTO expedia_hotel_rankings ( run_date, search_start_date, search_end_date, rank, hotel_id, location, '\
             ' price, original_price, total_price, rating, comment, review_count, review_text, sponsored, amenities, badges, '\
             ' full_text, access) SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
 
         val = [
-            datetime.date.today(), search_start_date, search_end_date, rank, listing['hotel_id'], location,
+            today, search_start_date, search_end_date, rank, listing['hotel_id'], location,
             listing['price'], listing['original_price'], listing['total_price'], listing['rating'], listing['comment'],
             listing['review_count'], listing['full_review'], listing['sponsored'], str(listing['amenities']),
             str(listing['badges']), listing['full_text'], listing['vip_access']
@@ -225,6 +225,15 @@ class Connector():
             return True
         return False
 
+    def dummy(self):
+        sql = 'insert into `expedia_hotels`(hotel_id, name) values(%s, %s)'
+
+        val = [
+            '123123123', 'NEW🌟Spaciou'
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
 
 def get_connector():
     return Connector()
@@ -233,12 +242,19 @@ def get_connector():
 connector = Connector()
 
 if __name__ == '__main__':
+    # connector.dummy()
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean-db', dest='delete',
                         default=False, action="store_true",
                         help='Delete the db entrie')
+    parser.add_argument('--date', dest='run_date',
+                        help='Delete the db entrie')
+
+    parser.add_argument('--location', dest='location',
+                        help='Delete the db entrie')
     input_values = parser.parse_args()
 
-    if input_values.delete:
-        connector.clean_db()
+    if input_values.delete and input_values.run_date:
+        dt = datetime.strptime(input_values.run_date, "%Y-%m-%d")
+        # connector.clean_db(dt, input_values.location)
         print("Be extremely careful with the below query.")

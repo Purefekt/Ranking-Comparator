@@ -44,7 +44,7 @@ def save_raw_file(content, dir, name):
 
 
 def send_raw_file(content, dir, name):
-	dir = dir.replace(' ','')
+	dir = dir.replace(' ', '')
 	local_name = save_raw_file(content, dir, name)
 	full_dir = REMOTE_PARENT_DIR + dir
 	env.host_string = REMOTE_SERVER

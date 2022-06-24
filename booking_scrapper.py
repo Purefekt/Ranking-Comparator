@@ -10,17 +10,16 @@ from selenium.webdriver.common.by import By
 import hashlib
 import os
 import time
-import datetime
 from urllib.parse import urlencode
 
 # from requester import generic_request
 from connector import connector
-from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR, REMOTE_PARENT_DIR
+from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR
 from logger import logger
 from utils import *
 
 
-def fetch_rankings(start_date, end_date):
+def fetch_rankings(start_date, end_date, today):
 	try:
 
 		query = {
@@ -44,9 +43,9 @@ def fetch_rankings(start_date, end_date):
 			query["dest_type"] = loc[2]
 
 			limit = 500
-			offset = 125
-			page = 6
-			i = 126
+			offset = 0
+			page = 1
+			i = 0
 
 			while offset < limit:
 				query["offset"] = offset
@@ -78,8 +77,7 @@ def fetch_rankings(start_date, end_date):
 				time.sleep(1)
 
 				# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-				send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-				return
+				send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 
 				total_listing = driver.find_elements(By.XPATH, "//h1")
 				if len(total_listing) > 0:
@@ -119,7 +117,6 @@ def fetch_rankings(start_date, end_date):
 					}
 
 					info_array = li.text.splitlines()
-					logger.info("Checking the listing- " + str(info_array))
 
 					# Removing excess info
 					info_array = list(filter(lambda a: a != "Opens in new window", info_array))
@@ -141,6 +138,7 @@ def fetch_rankings(start_date, end_date):
 					listing['name'] = [photo.text for photo in name][0]
 					info_array = list(filter(lambda a: a != listing['name'], info_array))
 
+					logger.info("Name: " + listing['name'])
 					listing['locality'] = li.find_elements(By.CSS_SELECTOR, "span[data-testid='address']")[0].text
 					location = li.find_elements(By.CSS_SELECTOR, "div[data-testid='location']")[0]
 					listing['map_url'] = location.find_elements(By.CSS_SELECTOR, "div > a")[0].get_attribute("href")
@@ -179,12 +177,15 @@ def fetch_rankings(start_date, end_date):
 								listing['external_review_count'] = listing['external_review_count'][:-16].replace(',', '')
 
 					rec_unit = li.find_elements(By.CSS_SELECTOR, "div[data-testid='recommended-units']")[0]
-					listing['recommended-unit'] = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(1) > span")[0].text
-					listing['recommended-unit-beds'] = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(2)")[0].text
-					availability = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(3)")
-					if len(availability) > 0:
-						listing['availability'] = availability[0].text
-					info_array = list(filter(lambda a: a != listing['recommended-unit'] and a != listing['recommended-unit-beds'] and a != listing['availability'], info_array))
+					try:
+						listing['recommended-unit'] = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(1) > span")[0].text
+						listing['recommended-unit-beds'] = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(2)")[0].text
+						availability = rec_unit.find_elements(By.CSS_SELECTOR, " div > div > div > div:nth-child(3)")
+						if len(availability) > 0:
+							listing['availability'] = availability[0].text
+						info_array = list(filter(lambda a: a != listing['recommended-unit'] and a != listing['recommended-unit-beds'] and a != listing['availability'], info_array))
+					except:
+						logger.exception("recommended-unit now found: ")
 
 					occupancy = li.find_elements(By.CSS_SELECTOR, "div[data-testid='price-for-x-nights']")
 					if len(occupancy) > 0:
@@ -216,7 +217,8 @@ def fetch_rankings(start_date, end_date):
 						# logger.info("Hotel already exists. Please check. " + listing['name'])
 						print("################# Hotel already exists. Please check. " + listing['name'])
 						connector.update_booking_hotel(listing)
-					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0])
+					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
+					logger.info("Rank: " + i)
 					logger.info("Completed listing: " + listing['name'])
 					i = i + 1
 				offset = offset + 25
@@ -226,14 +228,16 @@ def fetch_rankings(start_date, end_date):
 			print()
 			print()
 	except:
-		# print(listing)
-		# print(li.text)
+		print(listing)
+		print(li.text)
 		print('\a')
 		print('\a')
 		print('\a')
 		print('\a')
 		print('\a')
 		print('\a')
-		logger.error("Error faced while fetching business of area.")
+		logger.error(listing)
+		logger.error(info_array)
+		logger.error(" Booking Error occured.")
 		logger.exception("Exception: ")
-		time.sleep(10000)
+		raise
