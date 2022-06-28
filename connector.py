@@ -48,14 +48,14 @@ class Connector():
         cursor = self.connection.cursor()
         # cursor.execute('DELETE FROM expedia_hotels')
         # cursor.execute('DELETE FROM expedia_photos')
-        cursor.execute('DELETE FROM expedia_hotel_rankings where search_start_date = %s and location = %s', [run_date, location])
+        # cursor.execute('DELETE FROM expedia_hotel_rankings where search_start_date = %s and location = %s', [run_date, location])
         # cursor.execute('DELETE FROM booking_hotels')
         # cursor.execute('DELETE FROM booking_photos')
         # cursor.execute('DELETE FROM booking_hotel_rankings where run_date = %s', [run_date])
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('LAXsS')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -194,7 +194,7 @@ class Connector():
         self.connection.commit()
 
     def get_expedia_locations(self):
-        sql = "SELECT destination, region_id FROM expedia_locations"
+        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('LAXwwOU')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])

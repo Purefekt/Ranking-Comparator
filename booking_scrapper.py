@@ -35,7 +35,7 @@ def fetch_rankings(start_date, end_date, today):
 		}
 		locations = connector.get_booking_locations()
 		for loc in locations:
-			logger.info("Checking location: " + loc[0])
+			# logger.info("Checking location: " + loc[0])
 			print()
 			print("Checking location: " + loc[0])
 			query["ss"] = loc[0]
@@ -45,7 +45,7 @@ def fetch_rankings(start_date, end_date, today):
 			limit = 500
 			offset = 0
 			page = 1
-			i = 0
+			i = 1
 
 			while offset < limit:
 				query["offset"] = offset
@@ -83,12 +83,12 @@ def fetch_rankings(start_date, end_date, today):
 				if len(total_listing) > 0:
 					ct = total_listing[0].text
 					limit = int(ct[ct.index(':') + 2:-17].replace(',', ''))
-					logger.info('Total listings' + str(limit))
-					print('Total listings' + str(limit))
+					# logger.info('Total listings' + str(limit))
+					# print('Total listings' + str(limit))
 
 				listings = driver.find_elements(By.XPATH, "//div[@data-testid='property-card']")
-				logger.info("Found listing: " + str(len(listings)))
-				print("Found listings: " + str(len(listings)))
+				# logger.info("Found listing: " + str(len(listings)))
+				# print("Found listings: " + str(len(listings)))
 				for li in listings:
 
 					listing = {
@@ -138,7 +138,7 @@ def fetch_rankings(start_date, end_date, today):
 					listing['name'] = [photo.text for photo in name][0]
 					info_array = list(filter(lambda a: a != listing['name'], info_array))
 
-					logger.info("Name: " + listing['name'])
+					# logger.info("Name: " + listing['name'])
 					listing['locality'] = li.find_elements(By.CSS_SELECTOR, "span[data-testid='address']")[0].text
 					location = li.find_elements(By.CSS_SELECTOR, "div[data-testid='location']")[0]
 					listing['map_url'] = location.find_elements(By.CSS_SELECTOR, "div > a")[0].get_attribute("href")
@@ -185,7 +185,8 @@ def fetch_rankings(start_date, end_date, today):
 							listing['availability'] = availability[0].text
 						info_array = list(filter(lambda a: a != listing['recommended-unit'] and a != listing['recommended-unit-beds'] and a != listing['availability'], info_array))
 					except:
-						logger.exception("recommended-unit now found: ")
+						# logger.exception("recommended-unit now found: ")
+						pass
 
 					occupancy = li.find_elements(By.CSS_SELECTOR, "div[data-testid='price-for-x-nights']")
 					if len(occupancy) > 0:
@@ -215,11 +216,11 @@ def fetch_rankings(start_date, end_date, today):
 						connector.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
 					else:
 						# logger.info("Hotel already exists. Please check. " + listing['name'])
-						print("################# Hotel already exists. Please check. " + listing['name'])
+						# print("################# Hotel already exists. Please check. " + listing['name'])
 						connector.update_booking_hotel(listing)
 					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
-					logger.info("Rank: " + i)
-					logger.info("Completed listing: " + listing['name'])
+					# logger.info("Rank: " + str(i))
+					# logger.info("Completed listing: " + listing['name'])
 					i = i + 1
 				offset = offset + 25
 				page = page + 1
