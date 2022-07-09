@@ -53,7 +53,7 @@ def main():
             print("-----------------------------")
             print("EXPEDIA")
             logger.info("EXPEDIA")
-            # ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
             print()
             print("-----------------------------")
             print("-----------------------------")
