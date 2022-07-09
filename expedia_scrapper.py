@@ -117,7 +117,7 @@ def scrape(loc, start_date, end_date, today, con1):
 		# 	time.sleep(5)
 
 		# save_raw_file(driver.page_source, 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/', 'page.html.gz')
-		send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
+		save_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
 
 		listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 		# logger.info("Found listing: " + str(len(listings)))
