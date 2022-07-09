@@ -1,11 +1,7 @@
 from selenium import webdriver
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
 
 import hashlib
 import os
@@ -60,13 +56,17 @@ def scrape(loc, start_date, end_date, today, con1):
 		query["destination"] = loc[0]
 		query["regionId"] = loc[1]
 
-		chrome_driver = os.environ.get('CHROME_DRIVER')
-		opts = Options()
-		opts.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
-		opts.add_argument("--incognito")
-		driver = webdriver.Chrome(executable_path=chrome_driver, chrome_options=opts)
+		# chrome_driver = os.environ.get('CHROME_DRIVER')
+		opts = uc.ChromeOptions()
+		opts.headless = True
+		opts.add_argument('--headless')
+		# opts = Options()
+		# opts.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36")
+		# opts.add_argument("--incognito")
+		# driver = webdriver.Chrome(executable_path=chrome_driver, chrome_options=opts)
 		# driver = webdriver.Safari()
 		# driver = webdriver.Firefox(executable_path="./../geckodriver")
+		driver = uc.Chrome(suppress_welcome=False, options=opts)
 		url = EXPEDIA_SEARCH_URL + urlencode(query)
 		logger.info("URl: " + url)
 		print(url)
@@ -80,17 +80,23 @@ def scrape(loc, start_date, end_date, today, con1):
 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 		time.sleep(2)
 
+		ct = 100
 		try:
 			while driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary'):
+				listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
+				if len(listings) == ct:
+					break
+				ct = len(listings)
+				print("loading")
 				next_page_button = driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-padding-blockstart-three .uitk-button-secondary')
 				if next_page_button.is_enabled():
 					next_page_button.click()
-					time.sleep(5)
+					time.sleep(4)
 
 				driver.execute_script("window.scrollTo(0, document.body.scrollHeight*0.5);")
 				time.sleep(1)
 				driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-				time.sleep(2)
+				time.sleep(1)
 		except:
 			pass
 
@@ -275,6 +281,7 @@ def scrape(loc, start_date, end_date, today, con1):
 			listing['hotel_id'] = hashlib.md5(key).hexdigest()
 
 			logger.info("RANK " + str(i) + " " + listing['name'])
+			print("RANK " + str(i) + " " + listing['name'])
 			# print(listing['name'])
 			# logger.info(listing)
 

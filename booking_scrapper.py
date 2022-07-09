@@ -1,11 +1,7 @@
 from selenium import webdriver
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.keys import Keys
-# from selenium.webdriver.chrome.options import Options
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 
 import hashlib
 import os
@@ -65,10 +61,14 @@ def fetch_rankings(start_date, end_date, today):
 				# # print(len(listings))
 				# return
 
-				chrome_driver = os.environ.get('CHROME_DRIVER')
-				driver = webdriver.Chrome(executable_path=chrome_driver)
+				# chrome_driver = os.environ.get('CHROME_DRIVER')
+				# driver = webdriver.Chrome(executable_path=chrome_driver)
 				# driver = webdriver.Safari()
 				# driver = webdriver.Firefox(executable_path="./../geckodriver")
+				opts = uc.ChromeOptions()
+				opts.headless = True
+				opts.add_argument('--headless')
+				driver = uc.Chrome(suppress_welcome=False, options=opts)
 
 				driver.get(url)
 				time.sleep(6)
@@ -219,8 +219,9 @@ def fetch_rankings(start_date, end_date, today):
 						# print("################# Hotel already exists. Please check. " + listing['name'])
 						connector.update_booking_hotel(listing)
 					connector.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
-					# logger.info("Rank: " + str(i))
-					# logger.info("Completed listing: " + listing['name'])
+					logger.info("Rank: " + str(i))
+					print("Rank: " + str(i))
+					logger.info("Completed listing: " + listing['name'])
 					i = i + 1
 				offset = offset + 25
 				page = page + 1

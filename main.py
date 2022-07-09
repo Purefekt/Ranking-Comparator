@@ -36,7 +36,7 @@ def main():
         # bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
         # return
 
-        for i in range(5, 30):
+        for i in range(0, 30, 2):
             print()
             print()
             print()
@@ -53,13 +53,13 @@ def main():
             print("-----------------------------")
             print("EXPEDIA")
             logger.info("EXPEDIA")
-            ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            # ex_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
             print()
             print("-----------------------------")
             print("-----------------------------")
             print("BOOKING")
             logger.info("BOOKING")
-            # bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
             return
 
     except HTTPError as error:
