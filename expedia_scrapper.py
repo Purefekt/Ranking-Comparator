@@ -297,6 +297,8 @@ def scrape(loc, start_date, end_date, today, con1):
 		logger.info("First Location complete.")
 		print("First Location complete.")
 	except:
+		logger.error("Expedia Error occured")
+		logger.exception("Exception: ")
 		print(listing['name'])
 		print(listing)
 		print('\a')
@@ -306,8 +308,6 @@ def scrape(loc, start_date, end_date, today, con1):
 		print('\a')
 		logger.info(str(listing))
 		logger.info(str(info_array))
-		logger.error("Expedia Error occured")
-		logger.exception("Exception: ")
 	finally:
 		driver.close()
 

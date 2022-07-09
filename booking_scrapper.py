@@ -230,6 +230,8 @@ def fetch_rankings(start_date, end_date, today):
 			print()
 			print()
 	except:
+		logger.error(" Booking Error occured.")
+		logger.exception("Exception: ")
 		print(listing)
 		print(li.text)
 		print('\a')
@@ -240,6 +242,4 @@ def fetch_rankings(start_date, end_date, today):
 		print('\a')
 		logger.error(listing)
 		logger.error(info_array)
-		logger.error(" Booking Error occured.")
-		logger.exception("Exception: ")
 		raise
