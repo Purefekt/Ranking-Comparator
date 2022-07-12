@@ -31,12 +31,13 @@ def main():
 
     try:
         today = datetime.date.today()
+        today = today - datetime.timedelta(days=1)
         logger.info("RUNDATE- " + str(today))
         # ex_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
         # bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
         # return
 
-        for i in range(0, 30, 2):
+        for i in range(14, 30, 2):
             print()
             print()
             print()

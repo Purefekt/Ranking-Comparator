@@ -314,20 +314,20 @@ def scrape(loc, start_date, end_date, today, con1):
 
 def fetch_rankings(start_date, end_date, today):
 	try:
-		# queue = Queue()
-		# # Create 4 worker threads
-		# for x in range(4):
-		# 	worker = DownloadWorker(queue)
-		# 	# Setting daemon to True will let the main thread exit even though the workers are blocking
-		# 	worker.daemon = True
-		# 	worker.start()
+		queue = Queue()
+		# Create 4 worker threads
+		for x in range(4):
+			worker = DownloadWorker(queue)
+			# Setting daemon to True will let the main thread exit even though the workers are blocking
+			worker.daemon = True
+			worker.start()
 		locations = connector.get_expedia_locations()
 		for loc in locations:
 			# logger.info('Queueing {}'.format(business))
-			# queue.put((loc, start_date, end_date, today))
-			scrape_single(loc, start_date, end_date, today)
+			queue.put((loc, start_date, end_date, today))
+			# scrape_single(loc, start_date, end_date, today)
 		# Causes the main thread to wait for the queue to finish processing all the tasks
-		# queue.join()
+		queue.join()
 	except:
 		logger.exception("Error while running parallel threads")
 		print("Error while running parallel threads")

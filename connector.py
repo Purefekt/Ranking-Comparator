@@ -55,7 +55,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('LAXsS')"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('PLIL')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
