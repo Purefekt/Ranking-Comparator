@@ -61,7 +61,7 @@ def main():
             print("BOOKING")
             logger.info("BOOKING")
             bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
-            return
+            # return
 
     except HTTPError as error:
         sys.exit(
