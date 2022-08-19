@@ -25,7 +25,7 @@ def compare(first, second, listing):
 
 
 def save_raw_file(content, dir, name):
-	full_dir = REMOTE_PARENT_DIR + dir
+	full_dir = LOCAL_PARENT_DIR + dir
 	if not os.path.isdir(full_dir):
 		logger.info('Creating dir ' + full_dir)
 		os.makedirs(full_dir)

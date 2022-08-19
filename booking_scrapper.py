@@ -43,7 +43,7 @@ def fetch_rankings(start_date, end_date, today):
 	try:
 		queue = Queue()
 		# Create 4 worker threads
-		for x in range(11):
+		for x in range(4):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True
@@ -93,7 +93,7 @@ def scrape(loc, start_date, end_date, today, con1):
 			opts = uc.ChromeOptions()
 			opts.headless = True
 			opts.add_argument('--headless')
-			driver = uc.Chrome(suppress_welcome=False, options=opts)
+			driver = uc.Chrome(suppress_welcome=False,  service_args=["--verbose", "--log-path=cd.log"], options=opts)
 
 			driver.get(url)
 			time.sleep(6)
@@ -102,7 +102,7 @@ def scrape(loc, start_date, end_date, today, con1):
 			time.sleep(1)
 
 			# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-			save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+			send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 
 			total_listing = driver.find_elements(By.XPATH, "//h1")
 			if len(total_listing) > 0:
@@ -257,7 +257,7 @@ def scrape(loc, start_date, end_date, today, con1):
 					logger.exception("Exception: ")
 					logger.error(listing)
 					logger.error(info_array)
-			driver.cose()
+			driver.close()
 			offset = offset + 25
 			page = page + 1
 		logger.info("First Location complete.")

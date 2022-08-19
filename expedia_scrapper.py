@@ -56,7 +56,7 @@ def scrape(loc, start_date, end_date, today, con1):
 		opts = uc.ChromeOptions()
 		opts.headless = True
 		opts.add_argument('--headless')
-		driver = uc.Chrome(suppress_welcome=False, options=opts, driver_executable_path='/opt/google/chrome')
+		driver = uc.Chrome(suppress_welcome=False, options=opts)
 		url = EXPEDIA_SEARCH_URL + urlencode(query)
 		logger.info("URl: " + url)
 		print(url)
