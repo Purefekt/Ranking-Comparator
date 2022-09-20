@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from threading import Thread
 from queue import Queue
 
-from connector import connector, get_connector
+from connector import get_connector
 from const import EXPEDIA_SEARCH_URL, EXPEDIA_RAW_DIR
 from logger import logger
 from utils import *
@@ -23,24 +23,21 @@ class DownloadWorker(Thread):
 		while True:
 			# Get the work from the queue and expand the tuple
 			try:
-				con1 = get_connector()
 				param = self.queue.get()
 				loc = param[0]
 				start_date = param[1]
 				end_date = param[2]
 				today = param[3]
 				try:
-					scrape(loc, start_date, end_date, today, con1)
+					scrape(loc, start_date, end_date, today)
 				finally:
 					self.queue.task_done()
 			except:
 				logger.exception("Error before processing")
 				print("Error before processing")
-			finally:
-				con1.close()
 
 
-def scrape(loc, start_date, end_date, today, con1):
+def scrape(loc, start_date, end_date, today):
 	try:
 		listing = None
 		info_array = None
@@ -56,7 +53,7 @@ def scrape(loc, start_date, end_date, today, con1):
 		opts = uc.ChromeOptions()
 		opts.headless = True
 		opts.add_argument('--headless')
-		driver = uc.Chrome(suppress_welcome=False, options=opts)
+		driver = uc.Chrome(version_main=104, suppress_welcome=False, options=opts)
 		url = EXPEDIA_SEARCH_URL + urlencode(query)
 		logger.info("URl: " + url)
 		print(url)
@@ -254,14 +251,29 @@ def scrape(loc, start_date, end_date, today, con1):
 
 				logger.info("RANK " + str(i) + " " + listing['name'])
 				print("RANK " + str(i) + " " + listing['name'])
-
-				if not con1.does_expedia_hotel_exist(listing['hotel_id']):
-					con1.enter_expedia_hotel(listing, loc[0])
-					con1.enter_expedia_hotel_photos(listing['hotel_id'], listing['photos'])
-				else:
-					con1.update_expedia_hotel(listing)
-				con1.enter_expedia_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
-				i = i + 1
+				con_ct = 0
+				while con_ct<5:
+					try:
+						con1  = get_connector()
+						if not con1.does_expedia_hotel_exist(listing['hotel_id']):
+							con1.enter_expedia_hotel(listing, loc[0])
+							con1.enter_expedia_hotel_photos(listing['hotel_id'], listing['photos'])
+						else:
+							con1.update_expedia_hotel(listing)
+						con1.enter_expedia_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
+						con1.close()
+						i = i + 1
+						con_ct = 10
+					except Exception as e:
+						print("Faced excpetion")
+						print(e)
+						print(listing['name'])
+						print(listing)
+						print('\a')
+						print('\a')
+					finally:
+						con1.close()
+					con_ct = con_ct+1
 			except Exception as e:
 				print(e)
 				print(listing['name'])
@@ -292,12 +304,20 @@ def fetch_rankings(start_date, end_date, today):
 	try:
 		queue = Queue()
 		# Create 4 worker threads
-		for x in range(11):
+		for x in range(5):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True
 			worker.start()
-		locations = connector.get_expedia_locations()
+		try:
+			con = get_connector()
+			locations = con.get_expedia_locations()
+		except Exception as e:
+			print("Initialization failed")
+			print(e)
+			return
+		finally:
+			con.close()
 		for loc in locations:
 			# logger.info('Queueing {}'.format(business))
 			queue.put((loc, start_date, end_date, today))

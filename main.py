@@ -31,13 +31,10 @@ def main():
 
     try:
         today = datetime.date.today()
-        # today = today - datetime.timedelta(days=7)
+        # today = today - datetime.timedelta(days=5)
         logger.info("RUNDATE- " + str(today))
-        # ex_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
-        # bk_fetch_rankings(today + datetime.timedelta(days=1), today + datetime.timedelta(days=2))
-        # return
 
-        for i in range(0,30,2):
+        for i in range(8, 31, 2):
             print()
             print()
             print()
@@ -60,8 +57,8 @@ def main():
             print("-----------------------------")
             print("BOOKING")
             logger.info("BOOKING")
-            bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
-            return
+            # bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            # return
 
     except HTTPError as error:
         sys.exit(

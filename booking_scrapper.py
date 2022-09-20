@@ -22,33 +22,38 @@ class DownloadWorker(Thread):
 	def run(self):
 		while True:
 			try:
-				con1 = get_connector()
 				param = self.queue.get()
 				loc = param[0]
 				start_date = param[1]
 				end_date = param[2]
 				today = param[3]
 				try:
-					scrape(loc, start_date, end_date, today, con1)
+					scrape(loc, start_date, end_date, today)
 				finally:
 					self.queue.task_done()
 			except:
 				logger.exception("Error before processing")
 				print("Error before processing")
-			finally:
-				con1.close()
 
 
 def fetch_rankings(start_date, end_date, today):
 	try:
 		queue = Queue()
 		# Create 4 worker threads
-		for x in range(4):
+		for x in range(5):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True
 			worker.start()
-		locations = connector.get_booking_locations()
+		try:
+			con = get_connector()
+			locations = con.get_booking_locations()
+		except Exception as e:
+			print("Initialization failed")
+			print(e)
+			return
+		finally:
+			con.close()
 		for loc in locations:
 			queue.put((loc, start_date, end_date, today))
 			# scrape_single(loc, start_date, end_date, today)
@@ -58,7 +63,7 @@ def fetch_rankings(start_date, end_date, today):
 		print("Error while running parallel threads")
 
 
-def scrape(loc, start_date, end_date, today, con1):
+def scrape(loc, start_date, end_date, today):
 	try:
 		query = {
 			"checkout_year": str(end_date.year),
@@ -93,7 +98,7 @@ def scrape(loc, start_date, end_date, today, con1):
 			opts = uc.ChromeOptions()
 			opts.headless = True
 			opts.add_argument('--headless')
-			driver = uc.Chrome(suppress_welcome=False,  service_args=["--verbose", "--log-path=cd.log"], options=opts)
+			driver = uc.Chrome(version_main=104, suppress_welcome=False, options=opts)
 
 			driver.get(url)
 			time.sleep(6)
@@ -102,19 +107,22 @@ def scrape(loc, start_date, end_date, today, con1):
 			time.sleep(1)
 
 			# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-			send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+			save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 
 			total_listing = driver.find_elements(By.XPATH, "//h1")
-			if len(total_listing) > 0:
-				ct = total_listing[0].text
-				if '0 properties are available in and around this destination' in ct:
-					break
-				if 'properties' in ct:
-					limit = int(ct[ct.index(':') + 2:-17].replace(',', ''))
-				else:
-					limit = int(ct[ct.index(':') + 2:-15].replace(',', ''))
-				# logger.info('Total listings' + str(limit))
-				# print('Total listings' + str(limit))
+			try:
+				if len(total_listing) > 0:
+					ct = total_listing[0].text
+					if '0 properties are available in and around this destination' in ct:
+						break
+					if 'properties' in ct:
+						limit = int(ct[ct.index(':') + 2:-17].replace(',', ''))
+					else:
+						limit = int(ct[ct.index(':') + 2:-15].replace(',', ''))
+					# logger.info('Total listings' + str(limit))
+					# print('Total listings' + str(limit))
+			except:
+				print("Error while finding total listing- " + ct)
 
 			listings = driver.find_elements(By.XPATH, "//div[@data-testid='property-card']")
 			# logger.info("Found listing: " + str(len(listings)))
@@ -192,7 +200,8 @@ def scrape(loc, start_date, end_date, today, con1):
 								listing['review_count'] = listing['review_count'][:-8].replace(',', '')
 							else:
 								listing['review_count'] = listing['review_count'][:-7].replace(',', '')
-
+							if listing['review_count']=='':
+								listing['review_count'] = None
 						rating_arr = li.find_elements(By.CSS_SELECTOR, "div[data-testid='external-review-score']")
 						if len(rating_arr) > 0:
 							rating = rating_arr[0]
@@ -236,15 +245,31 @@ def scrape(loc, start_date, end_date, today, con1):
 
 					print(listing['name'])
 
-					if not con1.does_booking_hotel_exist(listing['hotel_id']):
-						con1.enter_booking_hotel(listing, loc[0])
-						con1.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
-					else:
-						con1.update_booking_hotel(listing)
-					con1.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
-					logger.info("Rank: " + str(i))
-					print("Rank: " + str(i))
-					logger.info("Completed listing: " + listing['name'])
+					con_ct = 0
+					while con_ct<5:
+						try:
+							con1  = get_connector()
+							if not con1.does_booking_hotel_exist(listing['hotel_id']):
+								con1.enter_booking_hotel(listing, loc[0])
+								con1.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
+							else:
+								con1.update_booking_hotel(listing)
+							con1.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
+							logger.info("Rank: " + str(i))
+							print("Rank: " + str(i))
+							logger.info("Completed listing: " + listing['name'])
+							con_ct = 10
+
+						except Exception as e:
+							logger.exception("Exception in add to DB")
+							print("Faced excpetion")
+							print(e)
+							logger.error(listing)
+							print('\a')
+							print('\a')
+						finally:
+							con1.close()
+						con_ct = con_ct+1
 					i = i + 1
 				except Exception as e:
 					print(e)

@@ -55,7 +55,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('PLIL')"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('BsdfsAX')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -194,7 +194,7 @@ class Connector():
         self.connection.commit()
 
     def get_expedia_locations(self):
-        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('LAXwwOU')"
+        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('CaaHI')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
