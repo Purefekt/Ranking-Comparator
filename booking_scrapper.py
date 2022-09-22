@@ -7,7 +7,7 @@ from threading import Thread
 from queue import Queue
 from urllib.parse import urlencode
 
-from connector import connector, get_connector
+from connector import get_connector
 from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR
 from logger import logger
 from utils import *
@@ -98,16 +98,31 @@ def scrape(loc, start_date, end_date, today):
 			opts = uc.ChromeOptions()
 			opts.headless = True
 			opts.add_argument('--headless')
+			opts.add_argument('--incognito')
 			driver = uc.Chrome(version_main=104, suppress_welcome=False, options=opts)
 
 			driver.get(url)
 			time.sleep(6)
 
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			time.sleep(1)
-
 			# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 			save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
+
+			try:
+				# //*[@id="b2searchresultsPage"]/div[15]/div/div/div/div[1]/div/div/div[2]/button
+				# /html/body/div[15]/div/div/div/div[1]/div/div/div[2]/button
+				#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button
+				if driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button'):
+					next_page_button = driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button')
+					if next_page_button.is_enabled():
+						next_page_button.click()
+						print("closing popup")
+						time.sleep(3)
+			except Exception as e:
+				print("Exception while closing sign up: " + str(e))
+				logger.exception("Exception while closing sign up: ")
+
+			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+			time.sleep(1)
 
 			total_listing = driver.find_elements(By.XPATH, "//h1")
 			try:
@@ -200,7 +215,7 @@ def scrape(loc, start_date, end_date, today):
 								listing['review_count'] = listing['review_count'][:-8].replace(',', '')
 							else:
 								listing['review_count'] = listing['review_count'][:-7].replace(',', '')
-							if listing['review_count']=='':
+							if listing['review_count'] == '':
 								listing['review_count'] = None
 						rating_arr = li.find_elements(By.CSS_SELECTOR, "div[data-testid='external-review-score']")
 						if len(rating_arr) > 0:
@@ -246,9 +261,9 @@ def scrape(loc, start_date, end_date, today):
 					print(listing['name'])
 
 					con_ct = 0
-					while con_ct<5:
+					while con_ct < 5:
 						try:
-							con1  = get_connector()
+							con1 = get_connector()
 							if not con1.does_booking_hotel_exist(listing['hotel_id']):
 								con1.enter_booking_hotel(listing, loc[0])
 								con1.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
@@ -269,7 +284,7 @@ def scrape(loc, start_date, end_date, today):
 							print('\a')
 						finally:
 							con1.close()
-						con_ct = con_ct+1
+						con_ct = con_ct + 1
 					i = i + 1
 				except Exception as e:
 					print(e)
