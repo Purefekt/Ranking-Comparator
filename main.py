@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from requester import *
 from expedia_scrapper import fetch_rankings as ex_fetch_rankings
@@ -31,7 +32,7 @@ def main():
 
     try:
         today = datetime.date.today()
-        # today = today - datetime.timedelta(days=5)
+        today = today - datetime.timedelta(days=2)
         logger.info("RUNDATE- " + str(today))
 
         for i in range(8, 31, 2):
@@ -57,7 +58,8 @@ def main():
             print("-----------------------------")
             print("BOOKING")
             logger.info("BOOKING")
-            # bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            bk_fetch_rankings(today + datetime.timedelta(days=i), today + datetime.timedelta(days=i + 1), today)
+            time.sleep(3)
             # return
 
     except HTTPError as error:

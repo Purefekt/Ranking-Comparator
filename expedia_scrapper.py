@@ -53,7 +53,7 @@ def scrape(loc, start_date, end_date, today):
 		opts = uc.ChromeOptions()
 		opts.headless = True
 		opts.add_argument('--headless')
-		driver = uc.Chrome(version_main=104, suppress_welcome=False, options=opts)
+		driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
 		url = EXPEDIA_SEARCH_URL + urlencode(query)
 		logger.info("URl: " + url)
 		print(url)
@@ -153,6 +153,8 @@ def scrape(loc, start_date, end_date, today):
 				# Name of the hotel
 				for n in name_element:
 					listing['name'] = n.text
+				if len(info_array) == 0:
+					continue
 				tmp = info_array[0]
 				listing['name'] = compare(listing['name'], tmp, listing)
 				info_array = list(filter(lambda a: a != tmp, info_array))

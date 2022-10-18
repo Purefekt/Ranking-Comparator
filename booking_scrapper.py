@@ -40,7 +40,7 @@ def fetch_rankings(start_date, end_date, today):
 	try:
 		queue = Queue()
 		# Create 4 worker threads
-		for x in range(5):
+		for x in range(6):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True
@@ -99,7 +99,7 @@ def scrape(loc, start_date, end_date, today):
 			opts.headless = True
 			opts.add_argument('--headless')
 			opts.add_argument('--incognito')
-			driver = uc.Chrome(version_main=104, suppress_welcome=False, options=opts)
+			driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
 
 			driver.get(url)
 			time.sleep(6)
@@ -118,7 +118,7 @@ def scrape(loc, start_date, end_date, today):
 						print("closing popup")
 						time.sleep(3)
 			except Exception as e:
-				print("Exception while closing sign up: " + str(e))
+				# print("Exception while closing  ` up: " + str(e))
 				logger.exception("Exception while closing sign up: ")
 
 			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -163,8 +163,8 @@ def scrape(loc, start_date, end_date, today):
 						'recommended_unit_beds': None,
 						'availability': None,
 						'occupancy': None,
-						'original_price': None,
-						'discounted_price': None,
+						'original_price': '',
+						'discounted_price': '',
 						'badges': [],
 						'sponsored': False
 					}
@@ -246,11 +246,15 @@ def scrape(loc, start_date, end_date, today):
 						listing['occupancy'] = occupancy[0].text
 					price = li.find_elements(By.CSS_SELECTOR, "div[data-testid='price-and-discounted-price'] > span:nth-child(1)")
 					price2 = li.find_elements(By.CSS_SELECTOR, "div[data-testid='price-and-discounted-price'] > span:nth-child(2)")
-					if len(price2) > 0:
-						listing['original_price'] = price[0].text
-						listing['discounted_price'] = price2[0].text
-					else:
-						listing['discounted_price'] = price[0].text
+					try:
+						if len(price2) > 0:
+							listing['original_price'] = price[0].text
+							listing['discounted_price'] = price2[0].text
+						else:
+							listing['discounted_price'] = price[0].text
+					except Exception as e:
+						logger.exception("Exception while fetching price: ")
+						# print("Exception while fetching price: " + str(e))
 					info_array = list(filter(lambda a: a != listing['occupancy'] and a != str(listing['original_price']) + listing['discounted_price'] and a != listing['discounted_price'], info_array))
 
 					listing['badges'] = info_array

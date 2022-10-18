@@ -55,7 +55,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('BsdfsAX')"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('NYCew')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -194,7 +194,7 @@ class Connector():
         self.connection.commit()
 
     def get_expedia_locations(self):
-        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('CaaHI')"
+        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('NsdfdsYC')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -224,6 +224,16 @@ class Connector():
         if len(hotels) == 1:
             return True
         return False
+
+    def get_expedia_hotel_urls(self):
+        sql = "SELECT hotel_id, url FROM expedia_hotels where flag is NULL limit 1"
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [])
+
+        hotels = cursor.fetchall()
+        return hotels
+
 
     def dummy(self):
         sql = 'insert into `expedia_hotels`(hotel_id, name) values(%s, %s)'
