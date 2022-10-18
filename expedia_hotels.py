@@ -8,7 +8,7 @@ from threading import Thread
 from queue import Queue
 
 from connector import get_connector
-from const import EXPEDIA_RAW_HOTEL_DIR
+from const import EXPEDIA_RAW_HOTEL_DIR, EXPEDIA_RAW_REVIEW_DIR
 from logger import logger
 from utils import *
 
@@ -59,34 +59,43 @@ def save_page(hotel):
 		save_raw_file(driver.page_source, EXPEDIA_RAW_HOTEL_DIR + '1_TRY/', hotel[0]+'.html.gz')
 		# send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
 
-		# try:
-		# 	all_reviews_button = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing-margin-block-three .uitk-button-secondary')
-		# 	for button in all_reviews_button:
-		# 		if button.text == 'See all reviews' and button.is_enabled():
-		# 			button.click()
-		# 			time.sleep(4)
-		# 			break
+		try:
+			all_reviews_button = driver.find_elements(By.CSS_SELECTOR, '.uitk-button-secondary')
+			for button in all_reviews_button:
+				print("Were" + button.text)
+				if button.text == 'See all reviews' and button.is_enabled():
+					print("here")
+					button.click()
+					save_raw_file(driver.page_source, EXPEDIA_RAW_REVIEW_DIR + '1_TRY/', hotel[0]+'.html.gz')
+					time.sleep(4)
+					break
+				else:
+					return
 
-		# 	while driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-margin-block-three .uitk-button-secondary'):
-		# 		more_review_buttons = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing-margin-block-three .uitk-button-secondary')
-		# 		found_element = False
-		# 		for button in more_review_buttons:
-		# 			if button.text == 'More reviews' and button.is_enabled():
-		# 				button.click()
-		# 				time.sleep(4)
-		# 				found_element = True
-		# 				break
-		# 		if not found_element:
-		# 			break
-		# 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight*0.5);")
-		# 		time.sleep(1)
-		# 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-		# 		time.sleep(1)
-		# 	print("saving")
-		# 	save_raw_file(driver.page_source, EXPEDIA_RAW_HOTEL_DIR + '1_TRY/', hotel[0]+'.html.gz')
-		# except Exception as e:
-		# 	print("error" + str(e))
-		# 	pass
+
+			while driver.find_element(By.CSS_SELECTOR, '.uitk-spacing-margin-block-three .uitk-button-secondary'):
+				more_review_buttons = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing-margin-block-three .uitk-button-secondary')
+				found_element = False
+				for button in more_review_buttons:
+					if button.text == 'More reviews' and button.is_enabled():
+						button.click()
+						time.sleep(4)
+						found_element = True
+						break
+				if not found_element:
+					break
+				driver.execute_script("window.scrollTo(0, document.body.scrollHeight*0.5);")
+				time.sleep(1)
+				driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+				time.sleep(1)
+			print("saving")
+			save_raw_file(driver.page_source, EXPEDIA_RAW_REVIEW_DIR + '1_TRY/', hotel[0]+'.html.gz')
+
+			reviews = driver.find_elements(By.CSS_SELECTOR, '.uitk-card-content-section-padded')
+
+		except Exception as e:
+			print("error" + str(e))
+			pass
 	except Exception as e:
 		logger.error("Expedia Error before listing")
 		logger.exception("Exception: ")
