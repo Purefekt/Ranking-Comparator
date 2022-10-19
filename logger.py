@@ -5,5 +5,5 @@ logger = logging
 logger.basicConfig(
 	filename='logs/ranking_comparator_' + str(datetime.datetime.now()) + '.log',
 	filemode='w',
-	format='%(message)s',
+	format='%(funcName)s(%(lineno)s) - %(message)s',
 	level=logging.INFO)
