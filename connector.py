@@ -55,7 +55,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('NYCew')"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('NsdfsYC')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -194,7 +194,7 @@ class Connector():
         self.connection.commit()
 
     def get_expedia_locations(self):
-        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('NsdfdsYC')"
+        sql = "SELECT destination, region_id FROM expedia_locations where iata not in ('MsdfgsIL')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -226,7 +226,7 @@ class Connector():
         return False
 
     def get_expedia_hotel_urls(self):
-        sql = "SELECT hotel_id, url FROM expedia_hotels where flag is NULL limit 1"
+        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and review_count > 30 and flag is NULL limit 100000"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -234,6 +234,44 @@ class Connector():
         hotels = cursor.fetchall()
         return hotels
 
+    def enter_expedia_hotel_info(self, hotel_info):
+        sql = 'INSERT INTO expedia_hotels_info ( hotel_id,latitude,locality,longitude,postal_code,region,street_address,title, country) '\
+            ' SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp'
+
+        val = [
+            hotel_info['hotel_id'], hotel_info['latitude'], hotel_info['locality'], hotel_info['longitude'],
+            hotel_info['postal_code'], hotel_info['region'], hotel_info['street_add'],
+            hotel_info['title'], hotel_info['country']
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+    def enter_expedia_review_info(self, review_info):
+        sql = 'INSERT INTO expedia_hotels_reviews_info (  '\
+            ' brandType, title,  negative_feedback, positive_feedback, response_responder, date_responder, name_responder,'\
+            ' review_text, photos, photos_count, rating, user_name, review_date, likes_count, review_id, rating_comment, hotel_id '\
+            ' ) SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp'
+
+        val = [
+            'EXPEDIA', review_info['title'], review_info['disliked'], review_info['liked'], 
+            review_info['owner_response'], review_info['owner_response_date'], 
+            review_info['owner'], review_info['review_text'], review_info['photos'], 
+            review_info['photos_count'], int(review_info['rating'].split('/')[0]), review_info['user'], 
+            review_info['date'], review_info['like_count'], review_info['review_id'],
+            review_info['rating'].split(' ')[1], review_info['hotel_id']
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+    def mark_hotel_compplete(self, hotel_id):
+        sql = 'UPDATE expedia_hotels set flag = 1 where hotel_id = %s '
+
+        val = [
+            hotel_id
+        ]
+        print(hotel_id)
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
 
     def dummy(self):
         sql = 'insert into `expedia_hotels`(hotel_id, name) values(%s, %s)'

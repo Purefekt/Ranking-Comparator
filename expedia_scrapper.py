@@ -238,8 +238,12 @@ def scrape(loc, start_date, end_date, today):
 						elif 'review' in a:
 							listing['review_count'] = compare(listing['review_count'], int(a[a.index('(') + 1:a.index(' review)')].replace(',', '')), listing)
 						listing['full_review'] = compare(listing['full_review'], a, listing)
+						# print(a)
+						# print(info_array)
 						info_array.remove(a)
-						info_array.remove(a.replace(' 5 ', ' 5').replace(' out of ', '/').replace(' (', '('))
+						p = a.replace(' 5 ', ' 5').replace(' out of ', '/').replace(' (', '(')
+						if p in info_array:
+							info_array.remove(p)
 
 				if len(info_array) > 0:
 					listing['nbh'] = info_array[0]
