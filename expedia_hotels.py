@@ -2,6 +2,11 @@ import traceback
 from selenium.webdriver.common.by import By
 import undetected_chromedriver as uc
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import hashlib
 import time
@@ -45,6 +50,11 @@ def save_page(hotel):
 		opts.headless = True
 		opts.add_argument('--headless')
 		driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
+
+		# options = Options()
+		# options.headless = True
+		# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+		
 		url = hotel[1]
 		print(hotel[0])
 		if '?' in url:
@@ -255,7 +265,7 @@ def fetch_hotel_pages():
 	try:
 		queue = Queue()
 		# Create worker threads
-		for x in range(30):
+		for x in range(50):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True

@@ -226,7 +226,7 @@ class Connector():
         return False
 
     def get_expedia_hotel_urls(self):
-        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and review_count is NULL and flag is NULL and hotel_id not in (select distinct(hotel_id) from `expedia_hotels_info`)"
+        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and review_count is NULL and flag is NULL and hotel_id not in (select distinct(hotel_id) from `expedia_hotels_info`) order by hotel_id desc"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
