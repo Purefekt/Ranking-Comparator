@@ -12,18 +12,19 @@ def get_chrome_main_version():
 
 def scrape():
 	try:
-#		print(uc.find_chrome_executable())
-		logging.info(uc.find_chrome_executable())
+# #		print(uc.find_chrome_executable())
+# 		logging.info(uc.find_chrome_executable())
 #		time.sleep(50)
 		opts = uc.ChromeOptions()
-		opts.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
+		# opts.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
 		# opts.add_argument('--user-data-dir=/tmp/dvdsdsfdummyprofile')
-		options.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
-		opts.add_argument("--incognito")
+		# options.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
+		# opts.add_argument("--incognito")
 		logging.info("Here")
-		driver = uc.Chrome(headless=True, version_main=103, options=opts, service_args=["--verbose", "--log-path=cd.log"])
+		driver = uc.Chrome(headless=True, version_main=106, options=opts, service_args=["--verbose", "--log-path=cd.log"])
 
 		driver.get('https://myexternalip.com/raw')
+		print(driver.find_elements(By.CSS_SELECTOR, 'body')[0].text)
 		time.sleep(1)
 		logging.info(driver.find_elements(By.CSS_SELECTOR, "body")[0].text)
 	except Exception as e:
@@ -31,5 +32,5 @@ def scrape():
 		logging.exception("Exception occured: ")
 
 if __name__ == '__main__':
-	get_chrome_main_version()
+	# get_chrome_main_version()
 	scrape()
