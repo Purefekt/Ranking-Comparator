@@ -46,7 +46,7 @@ def save_page(hotel):
 		opts.add_argument('--headless')
 		driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
 		url = hotel[1]
-		# print(hotel)
+		print(hotel[0])
 		if '?' in url:
 			url = url[:url.index('?')]
 		logger.info("URl: " + url)
