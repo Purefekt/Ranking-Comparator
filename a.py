@@ -2,6 +2,9 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 import undetected_chromedriver as uc
 import time
 import os
@@ -40,7 +43,7 @@ def scrape_s():
 		logging.info("Here")
 		options = Options()
 		options.headless = True
-		driver = webdriver.Chrome('./chromedriver', options=options)
+		driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 		driver.get('https://myexternalip.com/raw')
 		print(driver.find_elements(By.CSS_SELECTOR, 'body')[0].text)
 		time.sleep(1)
