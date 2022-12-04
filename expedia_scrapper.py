@@ -6,6 +6,7 @@ import time
 from urllib.parse import urlencode
 from threading import Thread
 from queue import Queue
+import datetime
 
 from connector import get_connector
 from const import EXPEDIA_SEARCH_URL, EXPEDIA_RAW_DIR

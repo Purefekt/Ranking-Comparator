@@ -75,20 +75,30 @@ def save_page(hotel):
 		# send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
 		
 		# Hotel Info
-		hotel_info = {}
-		hotel_info['title'] = driver.find_elements(By.CSS_SELECTOR, '.uitk-heading-3')[0].text
-		hotel_info['hotel_id'] = hotel[0]
-		full_address = driver.find_elements(By.CSS_SELECTOR, '.uitk-text-default-theme.uitk-layout-flex-item-flex-basis-full_width')[0].text
-		full_add_arr = full_address.split(',')
-		hotel_info['postal_code'] = full_add_arr[len(full_add_arr) - 1].strip()
-		hotel_info['region'] = full_add_arr[len(full_add_arr) - 2].strip()
-		hotel_info['locality'] = full_add_arr[len(full_add_arr) - 3].strip()
-		hotel_info['street_add'] = ','.join(full_add_arr[0: len(full_add_arr) - 3]).strip()
+		try:
+			hotel_info = {}
+			hotel_info['title'] = driver.find_elements(By.CSS_SELECTOR, '.uitk-heading-3')[0].text
+			hotel_info['hotel_id'] = hotel[0]
+			full_address = driver.find_elements(By.CSS_SELECTOR, '.uitk-text-default-theme.uitk-layout-flex-item-flex-basis-full_width')[0].text
+			full_add_arr = full_address.split(',')
+			hotel_info['postal_code'] = full_add_arr[len(full_add_arr) - 1].strip()
+			hotel_info['region'] = full_add_arr[len(full_add_arr) - 2].strip()
+			hotel_info['locality'] = full_add_arr[len(full_add_arr) - 3].strip()
+			hotel_info['street_add'] = ','.join(full_add_arr[0: len(full_add_arr) - 3]).strip()
 
-		hotel_info['latitude'] = float(driver.find_elements(By.XPATH, "//meta[@itemprop='latitude']")[0].get_attribute('content'))
-		hotel_info['longitude'] = float(driver.find_elements(By.XPATH, "//meta[@itemprop='longitude']")[0].get_attribute('content'))
-		hotel_info['country'] = geolocator.reverse(str(hotel_info['latitude']) + "," + str(hotel_info['longitude'])).raw['address'].get('country')
-
+			hotel_info['latitude'] = float(driver.find_elements(By.XPATH, "//meta[@itemprop='latitude']")[0].get_attribute('content'))
+			hotel_info['longitude'] = float(driver.find_elements(By.XPATH, "//meta[@itemprop='longitude']")[0].get_attribute('content'))
+			hotel_info['country'] = geolocator.reverse(str(hotel_info['latitude']) + "," + str(hotel_info['longitude'])).raw['address'].get('country')
+		except Exception as e:
+			if 'list index out of range' in str(e):
+				print("wohoooooo")
+				try:
+					con = get_connector()
+					con.mark_hotel_incompplete(hotel[0])
+					con.close()
+				except Exception as ep:
+					return
+			return
 		r_ids = set()
 		try:
 			con = get_connector()
@@ -105,6 +115,7 @@ def save_page(hotel):
 				print("SQL connection failed")
 				print(e)
 				logger.exception("SQL connection failed: ")
+				driver.close()
 				return
 		
 
@@ -121,6 +132,7 @@ def save_page(hotel):
 				print(e)
 				logger.exception("SQL connection failed: ")
 			finally:
+				driver.close()
 				return
 
 		all_reviews_button = driver.find_elements(By.CSS_SELECTOR, '.uitk-button-secondary')
@@ -233,6 +245,7 @@ def save_page(hotel):
 							print("SQL connection failed")
 							print(e)
 							logger.exception("SQL connection failed: ")
+							driver.close()
 							return
 			print("next")
 		try:
@@ -265,7 +278,7 @@ def fetch_hotel_pages():
 	try:
 		queue = Queue()
 		# Create worker threads
-		for x in range(50):
+		for x in range(20):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True

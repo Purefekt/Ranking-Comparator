@@ -55,7 +55,7 @@ class Connector():
         self.connection.commit()
 
     def get_booking_locations(self):
-        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('NsdfsYC')"
+        sql = "SELECT destination, dest_id, dest_type, iata from booking_locations where iata not in ('NYCwef')"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -226,7 +226,7 @@ class Connector():
         return False
 
     def get_expedia_hotel_urls(self):
-        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and review_count is NULL and flag is NULL and hotel_id not in (select distinct(hotel_id) from `expedia_hotels_info`) order by hotel_id desc"
+        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and flag is NULL and hotel_id not in (select distinct(hotel_id) from `expedia_hotels_info`) order by url"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
@@ -274,6 +274,17 @@ class Connector():
 
     def mark_hotel_compplete(self, hotel_id):
         sql = 'UPDATE expedia_hotels set flag = 1 where hotel_id = %s '
+
+        val = [
+            hotel_id
+        ]
+        print(hotel_id)
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+
+    def mark_hotel_incompplete(self, hotel_id):
+        sql = 'UPDATE expedia_hotels set flag = 2 where hotel_id = %s '
 
         val = [
             hotel_id

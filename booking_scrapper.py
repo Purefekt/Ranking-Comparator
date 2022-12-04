@@ -6,6 +6,7 @@ import time
 from threading import Thread
 from queue import Queue
 from urllib.parse import urlencode
+import datetime
 
 from connector import get_connector
 from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR
@@ -40,7 +41,7 @@ def fetch_rankings(start_date, end_date, today):
 	try:
 		queue = Queue()
 		# Create 4 worker threads
-		for x in range(6):
+		for x in range(5):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True
@@ -65,6 +66,7 @@ def fetch_rankings(start_date, end_date, today):
 
 def scrape(loc, start_date, end_date, today):
 	try:
+
 		query = {
 			"checkout_year": str(end_date.year),
 			"checkin_year": str(start_date.year),
@@ -76,6 +78,7 @@ def scrape(loc, start_date, end_date, today):
 			"group_children": 0,
 			"no_rooms": 1
 		}
+
 		# logger.info("Checking location: " + loc[0])
 		print()
 		print("Checking location: " + loc[0])
@@ -98,7 +101,7 @@ def scrape(loc, start_date, end_date, today):
 			opts = uc.ChromeOptions()
 			opts.headless = True
 			opts.add_argument('--headless')
-			opts.add_argument('--incognito')
+			# opts.add_argument('--incognito')
 			driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
 
 			driver.get(url)
@@ -107,12 +110,21 @@ def scrape(loc, start_date, end_date, today):
 			# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 			save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
 
+
+			driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
+			time.sleep(1)
+
+			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+			time.sleep(1.5)
+
+
 			try:
 				# //*[@id="b2searchresultsPage"]/div[15]/div/div/div/div[1]/div/div/div[2]/button
 				# /html/body/div[15]/div/div/div/div[1]/div/div/div[2]/button
 				#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button
-				if driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button'):
-					next_page_button = driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button')
+				if driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button'):
+					next_page_button = driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button')
+																			 #b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div >       div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button		
 					if next_page_button.is_enabled():
 						next_page_button.click()
 						print("closing popup")
@@ -120,9 +132,6 @@ def scrape(loc, start_date, end_date, today):
 			except Exception as e:
 				# print("Exception while closing  ` up: " + str(e))
 				logger.exception("Exception while closing sign up: ")
-
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			time.sleep(1)
 
 			total_listing = driver.find_elements(By.XPATH, "//h1")
 			try:
