@@ -1,7 +1,7 @@
 import os
 import gzip
 import yaml
-from fabric.api import run, env, put
+from fabric.api import run, env, put, get
 
 from logger import logger
 from const import LOCAL_PARENT_DIR, REMOTE_PARENT_DIR
@@ -12,6 +12,10 @@ with open("conf.yaml", 'r') as stream:
 	USER_NAME = yaml_loader.get('user_name')
 	REMOTE_PWD = yaml_loader.get('remote_pwd')
 
+
+env.host_string = REMOTE_SERVER
+env.user = USER_NAME
+env.password = REMOTE_PWD
 
 def compare(first, second, listing):
 	if second is None:
@@ -41,6 +45,18 @@ def save_raw_file(content, dir, name):
 	# 	return None
 	finally:
 		f.close
+
+def remote_command(cmd):
+	return run(cmd)
+
+
+def get_file(remote_path):
+	try:
+		# print(remote_path)
+		get(remote_path, './test/')
+		print("herer")
+	except Exception as e:
+		print(e)
 
 
 def send_raw_file(content, dir, name):

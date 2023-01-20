@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 import yaml
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from logger import logger
 
 
@@ -63,6 +63,15 @@ class Connector():
         locations = cursor.fetchall()
         return locations
 
+    def get_booking_location(self, iata):
+        sql = "SELECT destination from booking_locations where iata = %s"
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [iata])
+
+        locations = cursor.fetchall()
+        return locations
+
     def enter_booking_hotel_photos(self, hotel_id, photo_src):
         sql = 'INSERT INTO booking_photos ( hotel_id, image_src ) SELECT %s, %s as tmp'
 
@@ -102,6 +111,26 @@ class Connector():
             location, listing['rating'], listing['comment'], listing['review_count'],
             listing['url'], listing['map_url'], 0, str(listing['badges']),
             listing['distance_from_center'], listing['location_addon']
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+    def shift_booking_rankings(self, loc, run_date, start_date):
+        sql = 'UPDATE booking_hotel_rankings set run_date=%s'\
+            ' WHERE location = %s and run_Date = %s and search_start_date = %s'
+
+        val = [
+             run_date + timedelta(days=1), loc, run_date, start_date
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+    def clean_booking_rankings(self, loc, run_date, start_date):
+        sql = 'DELETE from booking_hotel_rankings '\
+            ' WHERE location = %s and run_Date = %s and search_start_date = %s'
+
+        val = [
+            loc, run_date, start_date
         ]
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
@@ -226,7 +255,7 @@ class Connector():
         return False
 
     def get_expedia_hotel_urls(self):
-        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and flag is NULL and hotel_id not in (select distinct(hotel_id) from `expedia_hotels_info`) order by url"
+        sql = "SELECT hotel_id, url FROM expedia_hotels where url is not Null and flag is NULL  order by url"
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])

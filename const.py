@@ -12,3 +12,5 @@ BOOKING_RAW_REVIEW_DIR = 'booking/reviews/'
 
 REMOTE_PARENT_DIR = '/data-2/research/expedia/raw_data/'
 LOCAL_PARENT_DIR = './raw_data/'
+
+CHROME_VERSION = 108

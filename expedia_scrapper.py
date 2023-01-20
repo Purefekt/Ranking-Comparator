@@ -9,7 +9,7 @@ from queue import Queue
 import datetime
 
 from connector import get_connector
-from const import EXPEDIA_SEARCH_URL, EXPEDIA_RAW_DIR
+from const import EXPEDIA_SEARCH_URL, EXPEDIA_RAW_DIR, CHROME_VERSION
 from logger import logger
 from utils import *
 
@@ -46,6 +46,9 @@ def scrape(loc, start_date, end_date, today):
 			"endDate": str(end_date),
 			"startDate": str(start_date)
 		}
+		# start_date = start_date - datetime.timedelta(days=1)
+		# end_date = end_date - datetime.timedelta(days=1)
+		# today = today - datetime.timedelta(days=1)
 		logger.info("Checking location: " + loc[0])
 		print("Checking location: " + loc[0])
 		query["destination"] = loc[0]
@@ -54,7 +57,7 @@ def scrape(loc, start_date, end_date, today):
 		opts = uc.ChromeOptions()
 		opts.headless = True
 		opts.add_argument('--headless')
-		driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
+		driver = uc.Chrome(version_main=CHROME_VERSION, suppress_welcome=False, options=opts)
 		url = EXPEDIA_SEARCH_URL + urlencode(query)
 		logger.info("URl: " + url)
 		print(url)
@@ -89,7 +92,7 @@ def scrape(loc, start_date, end_date, today):
 			pass
 
 		# save_raw_file(driver.page_source, 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/', 'page.html.gz')
-		save_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
+		send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
 
 		listings = driver.find_elements(By.CSS_SELECTOR, '.uitk-spacing.uitk-spacing-margin-blockstart-three')
 		i = 0

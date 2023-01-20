@@ -15,7 +15,7 @@ from threading import Thread
 from queue import Queue
 
 from connector import get_connector
-from const import EXPEDIA_RAW_HOTEL_DIR, EXPEDIA_RAW_REVIEW_DIR
+from const import EXPEDIA_RAW_HOTEL_DIR, EXPEDIA_RAW_REVIEW_DIR, CHROME_VERSION
 from logger import logger
 from utils import *
 
@@ -49,7 +49,7 @@ def save_page(hotel):
 		opts = uc.ChromeOptions()
 		opts.headless = True
 		opts.add_argument('--headless')
-		driver = uc.Chrome(version_main=106, suppress_welcome=False, options=opts)
+		driver = uc.Chrome(version_main=CHROME_VERSION, suppress_welcome=False, options=opts)
 
 		# options = Options()
 		# options.headless = True
@@ -71,8 +71,7 @@ def save_page(hotel):
 		driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 		time.sleep(0.5)
 
-		save_raw_file(driver.page_source, EXPEDIA_RAW_HOTEL_DIR + '1_TRY/', hotel[0] + '.html.gz')
-		# send_raw_file(driver.page_source, EXPEDIA_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0].replace(' (and vicinity)', '') + '/' + str(start_date) + '__' + str(end_date) + '/', 'page.html.gz')
+		send_raw_file(driver.page_source, EXPEDIA_RAW_HOTEL_DIR + '1_TRY/', hotel[0] + '.html.gz')
 		
 		# Hotel Info
 		try:
@@ -166,7 +165,7 @@ def save_page(hotel):
 				time.sleep(0.2)
 				time.sleep(0.2)
 		time.sleep(1)
-		save_raw_file(driver.page_source, EXPEDIA_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '.html.gz')
+		send_raw_file(driver.page_source, EXPEDIA_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '.html.gz')
 
 		reviews = driver.find_elements(By.CSS_SELECTOR, 'section .uitk-card .uitk-card-content-section-padded')
 		
@@ -278,7 +277,7 @@ def fetch_hotel_pages():
 	try:
 		queue = Queue()
 		# Create worker threads
-		for x in range(20):
+		for x in range(6):
 			worker = DownloadWorker(queue)
 			# Setting daemon to True will let the main thread exit even though the workers are blocking
 			worker.daemon = True

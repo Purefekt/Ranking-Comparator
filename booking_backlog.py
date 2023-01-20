@@ -1,18 +1,21 @@
-from selenium.webdriver.common.by import By
-import undetected_chromedriver as uc
-
+import os
+import traceback
 import hashlib
+from connector import get_connector
+from const import BOOKING_RAW_DIR, REMOTE_PARENT_DIR, CHROME_VERSION
+from logger import logger
+from utils import *
+import sys
 import time
 from threading import Thread
 from queue import Queue
 from urllib.parse import urlencode
 import datetime
-
-from connector import get_connector
-from const import BOOKING_SEARCH_URL, BOOKING_RAW_DIR, CHROME_VERSION
-from logger import logger
-from utils import *
-
+import gzip
+import shutil
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import glob
 
 class DownloadWorker(Thread):
 
@@ -22,138 +25,55 @@ class DownloadWorker(Thread):
 
 	def run(self):
 		while True:
+			# Get the work from the queue and expand the tuple
 			try:
 				param = self.queue.get()
-				loc = param[0]
-				start_date = param[1]
-				end_date = param[2]
-				today = param[3]
 				try:
-					scrape(loc, start_date, end_date, today)
+					save_page(param)
 				finally:
 					self.queue.task_done()
 			except:
+				traceback.print_exc()
 				logger.exception("Error before processing")
 				print("Error before processing")
 
 
-def fetch_rankings(start_date, end_date, today):
+def save_page(info):	
 	try:
-		queue = Queue()
-		# Create 4 worker threads
-		for x in range(5):
-			worker = DownloadWorker(queue)
-			# Setting daemon to True will let the main thread exit even though the workers are blocking
-			worker.daemon = True
-			worker.start()
+		today = info[1]
+		start_date = info[2]
+		end_date = info[3]
+		loc = info[0]
 		try:
 			con = get_connector()
-			locations = con.get_booking_locations()
+			# con.shift_booking_rankings(loc, today, start_date)
+			con.clean_booking_rankings(loc, today, start_date)
 		except Exception as e:
-			print("Initialization failed")
-			print(e)
+			print("Initialization failed: " + str(e))
 			return
 		finally:
 			con.close()
-		for loc in locations:
-			queue.put((loc, start_date, end_date, today))
-			# scrape_single(loc, start_date, end_date, today)
-		queue.join()
-	except:
-		logger.exception("Error while running parallel threads")
-		print("Error while running parallel threads")
-
-
-def scrape(loc, start_date, end_date, today):
-	try:
-
-		query = {
-			"checkout_year": str(end_date.year),
-			"checkin_year": str(start_date.year),
-			"checkout_month": str(end_date.month),
-			"checkin_month": str(start_date.month),
-			"checkout_monthday": str(end_date.day),
-			"checkin_monthday": str(start_date.day),
-			"group_adults": 2,
-			"group_children": 0,
-			"no_rooms": 1
-		}
-		
-		# start_date = start_date - datetime.timedelta(days=1)
-		# end_date = end_date - datetime.timedelta(days=1)
-		# today = today - datetime.timedelta(days=1)
-		# logger.info("Checking location: " + loc[0])
-		print()
-		print("Checking location: " + loc[0])
-		query["ss"] = loc[0]
-		query["dest_id"] = loc[1]
-		query["dest_type"] = loc[2]
-
-		limit = 500
-		offset = 0
+		dirr = REMOTE_PARENT_DIR + BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc + '/' + str(start_date) + '__' + str(end_date) 
+		# response = remote_command('ls {0}'.format(dirr.replace(' ', '\ '))).replace('page', '').replace('.html.gz', '').split(' ')
+		# response = list(filter(lambda x: len(x)>0, response))
+		get_file(dirr + '/*')
+		# pages = len(response)
+		pages = len(glob.glob1('./test/',"*.html.gz"))
+		print(pages)
 		page = 1
 		i = 1
-
-		while offset < limit:
-			query["offset"] = offset
-
-			url = BOOKING_SEARCH_URL + urlencode(query)
-			logger.info("URl: " + url)
-			print(url)
-
-			opts = uc.ChromeOptions()
-			opts.headless = True
-			opts.add_argument('--headless')
-			# opts.add_argument('--incognito')
-			driver = uc.Chrome(version_main=CHROME_VERSION, suppress_welcome=False, options=opts)
-
-			driver.get(url)
-			time.sleep(6)
-
-			# save_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(datetime.date.today()) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-			send_raw_file(driver.page_source, BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc[0] + '/' + str(start_date) + '__' + str(end_date) + '/', 'page' + str(page) + '.html.gz')
-
-
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
-			time.sleep(1)
-
-			driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-			time.sleep(1.5)
-
-
-			try:
-				# //*[@id="b2searchresultsPage"]/div[15]/div/div/div/div[1]/div/div/div[2]/button
-				# /html/body/div[15]/div/div/div/div[1]/div/div/div[2]/button
-				#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button
-				if driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button'):
-					next_page_button = driver.find_element(By.CSS_SELECTOR, '#b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div > div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button')
-																			 #b2searchresultsPage > div.c85f9f100b.cb6c8dd99f > div > div > div > div.dabce2e809 > div >       div.bb0b3e18ca.bad25cd8dc.d9b0185ac2.ba6d71e9d5 > button		
-					if next_page_button.is_enabled():
-						next_page_button.click()
-						print("closing popup")
-						time.sleep(3)
-			except Exception as e:
-				# print("Exception while closing  ` up: " + str(e))
-				logger.exception("Exception while closing sign up: ")
-
-			total_listing = driver.find_elements(By.XPATH, "//h1")
-			try:
-				if len(total_listing) > 0:
-					ct = total_listing[0].text
-					if '0 properties are available in and around this destination' in ct:
-						break
-					if 'properties' in ct:
-						limit = int(ct[ct.index(':') + 2:-17].replace(',', ''))
-					else:
-						limit = int(ct[ct.index(':') + 2:-15].replace(',', ''))
-					# logger.info('Total listings' + str(limit))
-					# print('Total listings' + str(limit))
-			except:
-				print("Error while finding total listing- " + ct)
-
+		while page <= pages:
+			print(page)
+			with gzip.open('./test/page'+str(page)+'.html.gz', 'rb') as f_in:
+			    with open('./test/page'+str(page)+'.html', 'wb') as f_out:
+			        shutil.copyfileobj(f_in, f_out)
+			
+			driver = webdriver.Chrome(executable_path='./chromedriver')
+			p = driver.get('file:/Users/dproserp/RA_Projects/Ranking-Comparator/test/page'+str(page)+'.html')
+			
+			time.sleep(5)
 			listings = driver.find_elements(By.XPATH, "//div[@data-testid='property-card']")
-			# logger.info("Found listing: " + str(len(listings)))
-			# print("Found listings: " + str(len(listings)))
+	
 			for li in listings:
 				try:
 					listing = {
@@ -180,7 +100,6 @@ def scrape(loc, start_date, end_date, today):
 						'badges': [],
 						'sponsored': False
 					}
-
 					info_array = li.text.splitlines()
 
 					# Removing excess info
@@ -271,7 +190,7 @@ def scrape(loc, start_date, end_date, today):
 
 					listing['badges'] = info_array
 
-					key = (listing['name'] + " " + loc[0] + " " + listing['locality']).encode()
+					key = (listing['name'] + " " + loc + " " + listing['locality']).encode()
 					listing['hotel_id'] = hashlib.md5(key).hexdigest()
 
 					print(listing['name'])
@@ -281,11 +200,11 @@ def scrape(loc, start_date, end_date, today):
 						try:
 							con1 = get_connector()
 							if not con1.does_booking_hotel_exist(listing['hotel_id']):
-								con1.enter_booking_hotel(listing, loc[0])
+								con1.enter_booking_hotel(listing, loc)
 								con1.enter_booking_hotel_photos(listing['hotel_id'], listing['cover_image'])
 							else:
 								con1.update_booking_hotel(listing)
-							con1.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc[0], today)
+							con1.enter_booking_hotel_ranking(listing, i, start_date, end_date, loc, today)
 							logger.info("Rank: " + str(i))
 							print("Rank: " + str(i))
 							logger.info("Completed listing: " + listing['name'])
@@ -293,10 +212,7 @@ def scrape(loc, start_date, end_date, today):
 
 						except Exception as e:
 							logger.exception("Exception in add to DB")
-							print("Faced excpetion")
-							print(e)
-							logger.error(listing)
-							print('\a')
+							print("Faced excpetion: " + str(e))
 							print('\a')
 						finally:
 							con1.close()
@@ -314,17 +230,52 @@ def scrape(loc, start_date, end_date, today):
 					logger.error(listing)
 					logger.error(info_array)
 			driver.close()
-			offset = offset + 25
-			page = page + 1
-		logger.info("First Location complete.")
-		print("First Location complete.\n\n")
+			page += 1
 	except Exception as e:
-		logger.error("Error occured before listings.")
-		logger.exception("Exception: ")
+		# logger.error("Expedia Error before listing")
+		# logger.exception("Exception: ")
+		traceback.print_exc()
 		print(e)
 		print('\a')
 		print('\a')
 		print('\a')
 		print('\a')
 		print('\a')
-		print('\a')
+
+
+def fetch_hotel_pages( run_date, start_date):
+	for iata in ('STG','STB','NYC','MIL','LAX','HOU','CHI','BOS','AUS','ASP'):
+		try:
+			# queue = Queue()
+			# # Create worker threads
+			# for x in range(1):
+			# 	worker = DownloadWorker(queue)
+			# 	# Setting daemon to True will let the main thread exit even though the workers are blocking
+			# 	worker.daemon = True
+			# 	worker.start()
+			print(iata)
+			try:
+				con = get_connector()
+				hotels = con.get_booking_location(iata)
+				location = hotels[0][0]
+			except Exception as e:
+				print("Initialization failed")
+				print(e)
+				continue
+			finally:
+				con.close()
+			for h in hotels:
+				# queue.put((location, run_date, start_date, start_date + datetime.timedelta(days=1)))
+				save_page((location, run_date, start_date, start_date + datetime.timedelta(days=1)))
+			# queue.join()
+			dir = './test/'
+			for f in os.listdir(dir):
+			    os.remove(os.path.join(dir, f))
+		except:
+			logger.exception("Error while running parallel threads")
+			print("Error while running parallel threads")
+
+
+if __name__ == '__main__':
+	fetch_hotel_pages( datetime.datetime.strptime(sys.argv[2], '%Y-%m-%d').date(), datetime.datetime.strptime(sys.argv[3], '%Y-%m-%d').date())
+	print('\a')
