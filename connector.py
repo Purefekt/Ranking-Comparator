@@ -120,7 +120,7 @@ class Connector():
             ' WHERE location = %s and run_Date = %s and search_start_date = %s'
 
         val = [
-             run_date + timedelta(days=1), loc, run_date, start_date
+             run_date - timedelta(days=1), loc, run_date, start_date
         ]
         self.connection.cursor().execute(sql, val)
         self.connection.commit()

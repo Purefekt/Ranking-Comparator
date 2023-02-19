@@ -46,8 +46,8 @@ def save_page(info):
 		loc = info[0]
 		try:
 			con = get_connector()
-			# con.shift_booking_rankings(loc, today, start_date)
-			con.clean_booking_rankings(loc, today, start_date)
+			con.shift_booking_rankings(loc, today, start_date)
+			# con.clean_booking_rankings(loc, today, start_date)
 		except Exception as e:
 			print("Initialization failed: " + str(e))
 			return
@@ -56,6 +56,8 @@ def save_page(info):
 		dirr = REMOTE_PARENT_DIR + BOOKING_RAW_DIR + 'RUNDATE_' + str(today) + '/' + loc + '/' + str(start_date) + '__' + str(end_date) 
 		# response = remote_command('ls {0}'.format(dirr.replace(' ', '\ '))).replace('page', '').replace('.html.gz', '').split(' ')
 		# response = list(filter(lambda x: len(x)>0, response))
+		# dirr = dirr.replace(' ', '')
+		print(dirr)
 		get_file(dirr + '/*')
 		# pages = len(response)
 		pages = len(glob.glob1('./test/',"*.html.gz"))
@@ -244,7 +246,19 @@ def save_page(info):
 
 
 def fetch_hotel_pages( run_date, start_date):
-	for iata in ('STG','STB','NYC','MIL','LAX','HOU','CHI','BOS','AUS','ASP'):
+	for iata in (
+		# 'LPC',
+		# 'STG',
+		# 'STB',
+		# 'NYC',
+		'MIL',
+		# 'LAX',
+		# 'HOU',
+		# 'CHI',
+		# 'BOS',
+		# 'AUS',
+		# 'ASP'
+		):
 		try:
 			# queue = Queue()
 			# # Create worker threads
@@ -277,5 +291,11 @@ def fetch_hotel_pages( run_date, start_date):
 
 
 if __name__ == '__main__':
-	fetch_hotel_pages( datetime.datetime.strptime(sys.argv[2], '%Y-%m-%d').date(), datetime.datetime.strptime(sys.argv[3], '%Y-%m-%d').date())
+	run_date = '2022-11-04'
+	start_ds = [
+	 '2022-11-30'
+	  ]
+	for s in start_ds:
+		fetch_hotel_pages( datetime.datetime.strptime(run_date, '%Y-%m-%d').date(), datetime.datetime.strptime(s, '%Y-%m-%d').date())
+	# fetch_hotel_pages( datetime.datetime.strptime(sys.argv[2], '%Y-%m-%d').date(), datetime.datetime.strptime(sys.argv[3], '%Y-%m-%d').date())
 	print('\a')
