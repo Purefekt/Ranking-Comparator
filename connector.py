@@ -311,6 +311,16 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
+    def mark_booking_hotel_info_complete(self, hotel_id):
+        sql = 'UPDATE booking_hotels set flag_info = 1 where hotel_id = %s '
+
+        val = [
+            hotel_id
+        ]
+        print(f'Marking hotel --> {hotel_id} as complete!')
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
 
     def mark_hotel_incompplete(self, hotel_id):
         sql = 'UPDATE expedia_hotels set flag = 2 where hotel_id = %s '
@@ -356,6 +366,27 @@ class Connector():
         res = cursor.fetchall()
         latest_review_id = res[0][0]
         return latest_review_id
+
+    def get_booking_hotel_urls(self):
+        sql = "select hotel_id, url from booking_hotels where url is not null and flag_info is null"
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [])
+
+        hotels = cursor.fetchall()
+        return hotels
+
+    def enter_booking_hotel_info(self, hotel_info):
+        sql = "INSERT INTO booking_hotels_info (hotel_id, url, country, latitude, locality, longitude, postal_code, region, street_address, title, description) "\
+            ' SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp'
+
+        val = [
+            hotel_info['hotel_id'], hotel_info['url'], hotel_info['country'], hotel_info['latitude'],
+            hotel_info['locality'], hotel_info['longitude'], hotel_info['postal_code'], hotel_info['region'],
+            hotel_info['street_address'], hotel_info['title'], hotel_info['description']
+        ]
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
 
     def dummy(self):
         sql = 'insert into `expedia_hotels`(hotel_id, name) values(%s, %s)'
