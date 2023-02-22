@@ -318,4 +318,8 @@ fabric.properties
 # idea folder, uncomment if you don't need it
 .idea
 
+# MacOS file
 .DS_Store
+
+# chrome driver
+chromedriver

@@ -322,6 +322,41 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
+    def get_expedia_hotel_ids_in_expedia_hotels_info_table(self):
+        sql = 'SELECT hotel_id from expedia_hotels_info'
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [])
+
+        res = cursor.fetchall()
+        hotel_ids_in_expedia_hotels_info = [row[0] for row in res]
+
+        return set(hotel_ids_in_expedia_hotels_info)
+
+    def get_hotels_with_existing_reviews(self):
+        sql = 'SELECT DISTINCT hotel_id from expedia_hotels_reviews_info'
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [])
+
+        res = cursor.fetchall()
+        hotels_with_existing_reviews = [row[0] for row in res]
+        return set(hotels_with_existing_reviews)
+
+    def get_latest_stored_review_id(self, hotel_id):
+        sql = "select review_id from expedia_hotels_reviews_info where hotel_id = %s order by review_date desc limit 1"
+
+        val = [
+            hotel_id
+        ]
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, val)
+
+        res = cursor.fetchall()
+        latest_review_id = res[0][0]
+        return latest_review_id
+
     def dummy(self):
         sql = 'insert into `expedia_hotels`(hotel_id, name) values(%s, %s)'
 
