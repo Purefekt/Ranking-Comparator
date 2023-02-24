@@ -332,6 +332,19 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
+    def mark_booking_hotel_incomplete(self, hotel_id):
+
+        sql = "UPDATE booking_hotels set flag_info = 2 where hotel_id = %s"
+
+        val = [
+            hotel_id
+        ]
+
+        print(f'Marking hotel --> {hotel_id} as incomplete :(')
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+
     def get_expedia_hotel_ids_in_expedia_hotels_info_table(self):
         sql = 'SELECT hotel_id from expedia_hotels_info'
 

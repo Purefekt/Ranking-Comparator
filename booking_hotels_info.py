@@ -89,6 +89,14 @@ def save_page(hotel):
             hotel_info["description"] = driver.find_elements(By.ID, 'property_description_content')[0].text
 
         except Exception as e:
+            if 'list index out of range' in str(e):
+                try:
+                    con = get_connector()
+                    con.mark_booking_hotel_incomplete(hotel[0])
+                    con.close()
+                except Exception as ep:
+                    print(ep)
+                    return
             print(e)
             return
 
