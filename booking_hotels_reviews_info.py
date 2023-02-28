@@ -4,9 +4,6 @@ from const import CHROME_VERSION
 from connector import get_connector
 import time
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 
 
 def save_page(hotel):
@@ -43,7 +40,6 @@ def save_page(hotel):
                 print('SQL connection failed')
                 print(e)
             finally:
-                driver.close()
                 return
 
         # Get all the reviews from the first page. Then move to the bottom and move to the 2nd page if it exists
@@ -51,25 +47,21 @@ def save_page(hotel):
         driver.set_window_size(width=1200, height=831)
         time.sleep(0.5)
 
-
-
-
-
+        first_page_reviews = driver.find_elements(By.CSS_SELECTOR, 'li.review_list_new_item_block')
+        for review in first_page_reviews:
+            print(review)
 
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
         num_pages = 1
 
-
         while next_page_button:
+            # scroll to the bottom and press the next page button if it exists. For each page get all reviews info
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
             time.sleep(0.5)
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(0.5)
-            time.sleep(5)
-
+            time.sleep(3)
             next_page_button[0].click()
-            
             time.sleep(1)
             next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
             num_pages += 1
