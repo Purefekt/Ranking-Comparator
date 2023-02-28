@@ -344,6 +344,17 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
+    def mark_booking_hotel_no_reviews_found(self, hotel_id):
+
+        sql = 'update booking_hotels set flag_reviews = 3 where hotel_id = %s'
+
+        val = [
+            hotel_id
+        ]
+
+        print(f'Marking hotel --> {hotel_id} as having no reviews :|')
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
 
     def get_expedia_hotel_ids_in_expedia_hotels_info_table(self):
         sql = 'SELECT hotel_id from expedia_hotels_info'
@@ -388,6 +399,16 @@ class Connector():
 
         hotels = cursor.fetchall()
         return hotels
+
+    def get_booking_hotels_urls_for_reviews(self):
+        sql = "select hotel_id, url from booking_hotels where url is not null and (flag_reviews is null or flag_reviews = 3) "
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [])
+
+        hotels = cursor.fetchall()
+        return hotels
+
 
     def enter_booking_hotel_info(self, hotel_info):
         sql = "INSERT INTO booking_hotels_info (hotel_id, url, country, latitude, locality, longitude, postal_code, region, street_address, title, description) "\

@@ -32,7 +32,7 @@ def main():
 
     try:
         today = datetime.date.today()
-        # today = today - datetime.timedelta(days=1)
+        # today = today - datetime.timedelta(days=2)
         logger.info("RUNDATE- " + str(today))
 
         for i in range(0, 31, 2):
