@@ -6,6 +6,10 @@ import time
 from selenium.webdriver.common.by import By
 
 
+def get_review_data(review_selenium_object):
+
+
+
 def save_page(hotel):
     try:
         opts = uc.ChromeOptions()
@@ -49,7 +53,8 @@ def save_page(hotel):
 
         first_page_reviews = driver.find_elements(By.CSS_SELECTOR, 'li.review_list_new_item_block')
         for review in first_page_reviews:
-            print(review)
+            print(get_review_data(review))
+
 
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
