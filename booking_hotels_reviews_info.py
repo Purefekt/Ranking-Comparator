@@ -6,7 +6,30 @@ import time
 from selenium.webdriver.common.by import By
 
 
-def get_review_data(review_selenium_object):
+def get_review_data(review_selenium_object, hotel_id):
+    review_info = {
+        "review_id" : None,
+        "brand_type": "BOOKING",
+        "reviewer_name": None,
+        "country_name": None,
+        "type_of_room": None,
+        "type_of_room_id": None,
+        "number_of_nights": None,
+        "stay_month_and_year": None,
+        "traveller_type": None,
+        "review_date": None,
+        "review_title": None,
+        "rating": None,
+        "pros": None,
+        "cons": None,
+        "hotel_owner_response": None,
+        "number_of_people_found_helpful": None,
+        "hotel_id": hotel_id,
+        "num_photos": None
+    }
+
+    
+
 
 
 
@@ -53,8 +76,7 @@ def save_page(hotel):
 
         first_page_reviews = driver.find_elements(By.CSS_SELECTOR, 'li.review_list_new_item_block')
         for review in first_page_reviews:
-            print(get_review_data(review))
-
+            print(get_review_data(review, hotel[0]))
 
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
