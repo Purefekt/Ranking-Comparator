@@ -1,10 +1,11 @@
 import traceback
 import undetected_chromedriver as uc
-from const import CHROME_VERSION
+from const import CHROME_VERSION, BOOKING_RAW_REVIEW_DIR
 from connector import get_connector
 import time
 from selenium.webdriver.common.by import By
 from datetime import datetime
+from utils import *
 
 
 def get_review_data(review_selenium_object, hotel_id):
@@ -70,19 +71,38 @@ def get_review_data(review_selenium_object, hotel_id):
         review_pro_text = review_pro.find_elements(By.CSS_SELECTOR, ".c-review__body")[0].text
         review_con_text = review_con.find_elements(By.CSS_SELECTOR, ".c-review__body")[0].text
 
-
     elif len(reviews_pro_and_con) == 1:
         smiley = reviews_pro_and_con[0].find_elements(By.CSS_SELECTOR, ".c-review__prefix--color-green")
         if len(smiley) > 0:
             review_pro = reviews_pro_and_con[0]
             review_pro_text = review_pro.find_elements(By.CSS_SELECTOR, ".c-review__body")[0].text
         else:
-            review_con = reviews_pro_and_con[1]
+            review_con = reviews_pro_and_con[0]
             review_con_text = review_con.find_elements(By.CSS_SELECTOR, ".c-review__body")[0].text
 
-    
+    helpful = None
+    helpful_info = review_selenium_object.find_elements(By.CSS_SELECTOR, ".review-helpful__vote-others-helpful")[0]
+    if len(helpful_info.text) > 0:
+        helpful = helpful_info.text
+        helpful = int(helpful.split(' ')[0])
 
+    owner_response = None
+    owner_response_div = review_selenium_object.find_elements(By.CSS_SELECTOR, ".c-review-block__response__inner")
+    if len(owner_response_div) > 0:
+        owner_response = owner_response_div[0].find_elements(By.CSS_SELECTOR, ".c-review-block__response__body")[0].text
 
+    number_of_photos = None
+    photos_links = None
+    images_ul_div = review_selenium_object.find_elements(By.CSS_SELECTOR, ".c-review-block__photos")
+    if len(images_ul_div) > 0:
+        images_list = images_ul_div[0].find_elements(By.CSS_SELECTOR, '.c-review-block__photos__item')
+        number_of_photos = len(images_list)
+        photos_links = []
+        for image in images_list:
+            print(image)
+            image = image.find_elements(By.CSS_SELECTOR, '.c-review-block__photos__button')[0]
+            image_src = image.get_attribute('data-photos-src')
+            photos_links.append(image_src)
 
 
 def save_page(hotel):
@@ -100,8 +120,6 @@ def save_page(hotel):
         driver.get(url)
 
         time.sleep(4)
-
-        """SEND RAW FILE COMES HERE"""
 
         # click the reviews button. Note: This works for when there are no reviews as well for some reason
         all_reviews_button = driver.find_elements(By.CSS_SELECTOR, "li.a0661136c9 a[href='#blockdisplay4']")[0]
@@ -127,8 +145,15 @@ def save_page(hotel):
         time.sleep(0.5)
 
         first_page_reviews = driver.find_elements(By.CSS_SELECTOR, 'li.review_list_new_item_block')
+        # press continue reading for all owner replies in a page
+        continue_reading_button = driver.find_elements(By.CSS_SELECTOR,'a[data-component="ugcs/dom-utils/toggle prevent-default-helper"]')
+        for button in continue_reading_button:
+            button.click()
+
         for review in first_page_reviews:
             get_review_data(review, hotel[0])
+
+        send_raw_file(driver.page_source, BOOKING_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '_page1.html.gz')
 
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
@@ -141,9 +166,15 @@ def save_page(hotel):
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(3)
             next_page_button[0].click()
-            time.sleep(1)
+            time.sleep(3)
+            # press continue reading for all owner replies in a page
+            continue_reading_button = driver.find_elements(By.CSS_SELECTOR,'a[data-component="ugcs/dom-utils/toggle prevent-default-helper"]')
+            for button in continue_reading_button:
+                button.click()
             next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
             num_pages += 1
+            send_raw_file(driver.page_source, BOOKING_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '_page' + str(num_pages) +'.html.gz')
+            print(f'    On page number -> {num_pages}')
         print(f'Number of pages -> {num_pages}')
 
 
@@ -178,7 +209,7 @@ def save_page(hotel):
 # ]
 
 hotels = [
-    ('00aa4734d9c6d26830fd291b98087b34', 'https://www.booking.com/hotel/us/courtyard-houston-brookhollow.html?aid=304142&ucfs=1&arphpl=1&checkin=2022-06-17&checkout=2022-06-18&dest_id=20128761&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=17&hapos=292&sr_order=popularity&srpvid=94f602affde5015c&srepoch=1655511776&all_sr_blocks=18102007_91825624_0_34_0&highlighted_blocks=18102007_91825624_0_34_0&matching_block_id=18102007_91825624_0_34_0&sr_pri_blocks=18102007_91825624_0_34_0__8560&tpi_r=2&from=searchresults#hotelTmpl')]
+    ('00a7b1a690f401a00e52e0b17e6d75cc', 'https://www.booking.com/hotel/us/hilton-garden-inn-times-square-central.html?aid=304142&ucfs=1&arphpl=1&checkin=2022-06-18&checkout=2022-06-19&dest_id=20088325&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=6&hapos=31&sr_order=popularity&srpvid=bb26895938dd0422&srepoch=1655580723&all_sr_blocks=61792902_266277720_2_2_0&highlighted_blocks=61792902_266277720_2_2_0&matching_block_id=61792902_266277720_2_2_0&sr_pri_blocks=61792902_266277720_2_2_0__27900&from_sustainable_property_sr=1&from=searchresults#hotelTmpl')]
 
 
 for hotel in hotels:
