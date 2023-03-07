@@ -301,6 +301,25 @@ class Connector():
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
+    def enter_booking_review_info(self, review_info):
+        sql = 'INSERT INTO booking_hotels_reviews_info ('\
+        'brandType, reviewID, user_name, country, room_type, room_typeID, number_of_nights, stay_time, traveller_type,'\
+        'review_date, review_title, rating, review_pros, review_cons, hotel_owner_response, num_people_found_helpful,'\
+        'hotel_id, num_photos, reviewers_choice, photos_link)'\
+        'SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
+
+        val = [
+            review_info["brand_type"], review_info["review_id"], review_info["reviewer_name"], review_info["country_name"],
+            review_info["type_of_room"], review_info["type_of_room_id"], review_info["number_of_nights"],
+            review_info["stay_month_and_year"], review_info["traveller_type"], review_info["review_date"],
+            review_info["review_title"], review_info["rating"], review_info["pros"], review_info["cons"],
+            review_info["hotel_owner_response"], review_info["number_of_people_found_helpful"], review_info["hotel_id"],
+            review_info["num_photos"], review_info["reviewers_choice"], review_info["photos_links"]
+        ]
+
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
     def mark_hotel_compplete(self, hotel_id):
         sql = 'UPDATE expedia_hotels set flag = 1 where hotel_id = %s '
 
@@ -353,6 +372,18 @@ class Connector():
         ]
 
         print(f'Marking hotel --> {hotel_id} as having no reviews :|')
+        self.connection.cursor().execute(sql, val)
+        self.connection.commit()
+
+    def mark_booking_hotel_reviews_complete(self, hotel_id):
+
+        sql = 'update booking_hotels set flag_reviews = 1 where hotel_id = %s'
+
+        val = [
+            hotel_id
+        ]
+
+        print(f'Marking hotel --> {hotel_id} as reviews completed! :)')
         self.connection.cursor().execute(sql, val)
         self.connection.commit()
 
