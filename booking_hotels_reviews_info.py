@@ -44,7 +44,8 @@ def get_review_data(review_selenium_object, hotel_id):
     stay_details = review_selenium_object.find_elements(By.CSS_SELECTOR, 'ul.c-review-block__stay-date')[0]
     stay_data = stay_details.find_elements(By.CSS_SELECTOR, "div.bui-list__body")[0].text
     stay_data = stay_data.split('·')
-    number_of_nights = int(stay_data[0].strip())
+    number_of_nights = stay_data[0].split(' ')[0]
+    number_of_nights = int(number_of_nights.strip())
     stay_month_year = stay_data[1].strip()
     stay_month_year = datetime.strptime(stay_month_year, '%B %Y').replace(day=1)
     stay_month_year = stay_month_year.strftime('%Y-%m-%d')
@@ -106,7 +107,7 @@ def get_review_data(review_selenium_object, hotel_id):
             image = image.find_elements(By.CSS_SELECTOR, '.c-review-block__photos__button')[0]
             image_src = image.get_attribute('data-photos-src')
             photos_links.append(image_src)
-    if len(photos_links) > 0:
+    if photos_links and len(photos_links) > 0:
         photos_links = json.dumps(photos_links)
 
 
@@ -258,6 +259,13 @@ print("Number of hotels: " + str(len(hotels)))
 #     ('000b844cb054f24182710897d78ac640', 'https://www.booking.com/hotel/us/modern-one-bedroom-located-in-the-texas-medical-center.html?aid=304142&label=gen173nr-1FCAQoggJCDWNpdHlfMjAxMjg3NjFIM1gEaIkCiAEBmAExuAEHyAEM2AEB6AEB-AEDiAIBqAIDuALxoPaeBsACAdICJDA2NTUyYTg5LTg1MjUtNDM4Yy1hNTIxLWRjZjhjOGIwNjFjONgCBeACAQ&ucfs=1&arphpl=1&checkin=2023-02-05&checkout=2023-02-06&dest_id=20128761&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=9&hapos=234&sr_order=popularity&srpvid=59a9a0f8bff201a2&srepoch=1675464818&all_sr_blocks=956790801_368318576_4_0_0&highlighted_blocks=956790801_368318576_4_0_0&matching_block_id=956790801_368318576_4_0_0&sr_pri_blocks=956790801_368318576_4_0_0__18000&from=searchresults#hotelTmpl')
 # ]
 
+
+# for hotel in hotels:
+#     try:
+#         save_page(hotel)
+#     except Exception as e:
+#         print(e)
+#         print('Crashed before processing hotel')
 
 for hotel in hotels:
     save_page(hotel)
