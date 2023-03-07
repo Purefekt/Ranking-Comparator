@@ -86,10 +86,12 @@ def get_review_data(review_selenium_object, hotel_id):
             review_con_text = review_con.find_elements(By.CSS_SELECTOR, ".c-review__body")[0].text
 
     helpful = None
-    helpful_info = review_selenium_object.find_elements(By.CSS_SELECTOR, ".review-helpful__vote-others-helpful")[0]
-    if len(helpful_info.text) > 0:
-        helpful = helpful_info.text
-        helpful = int(helpful.split(' ')[0])
+    helpful_info = review_selenium_object.find_elements(By.CSS_SELECTOR, ".review-helpful__vote-others-helpful")
+    if len(helpful_info) > 0:
+        helpful_info = helpful_info[0]
+        if helpful_info.text and len(helpful_info.text) > 0:
+            helpful = helpful_info.text
+            helpful = int(helpful.split(' ')[0])
 
     owner_response = None
     owner_response_div = review_selenium_object.find_elements(By.CSS_SELECTOR, ".c-review-block__response__inner")
@@ -180,7 +182,14 @@ def save_page(hotel):
 
         # get all reviews on page1
         for review in first_page_reviews:
-            ALL_REVIEWS.append(get_review_data(review, hotel[0]))
+            try:
+                ALL_REVIEWS.append(get_review_data(review, hotel[0]))
+            except Exception as e:
+                print(e)
+                print('Error in getting review info')
+            finally:
+                return
+
 
         # send_raw_file(driver.page_source, BOOKING_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '_page1.html.gz')
 
@@ -260,12 +269,10 @@ print("Number of hotels: " + str(len(hotels)))
 # ]
 
 
-# for hotel in hotels:
-#     try:
-#         save_page(hotel)
-#     except Exception as e:
-#         print(e)
-#         print('Crashed before processing hotel')
-
 for hotel in hotels:
-    save_page(hotel)
+    try:
+        save_page(hotel)
+    except Exception as e:
+        print(e)
+        print('Crashed before processing hotel')
+
