@@ -44,7 +44,7 @@ def get_review_data(review_selenium_object, hotel_id):
     stay_details = review_selenium_object.find_elements(By.CSS_SELECTOR, 'ul.c-review-block__stay-date')[0]
     stay_data = stay_details.find_elements(By.CSS_SELECTOR, "div.bui-list__body")[0].text
     stay_data = stay_data.split('·')
-    number_of_nights = stay_data[0].strip()
+    number_of_nights = int(stay_data[0].strip())
     stay_month_year = stay_data[1].strip()
     stay_month_year = datetime.strptime(stay_month_year, '%B %Y').replace(day=1)
     stay_month_year = stay_month_year.strftime('%Y-%m-%d')
@@ -63,7 +63,7 @@ def get_review_data(review_selenium_object, hotel_id):
     review_date = review_date.split(':')[1].strip()
     review_date = datetime.strptime(review_date, '%B %d, %Y')
     review_date = review_date.strftime('%Y-%m-%d')
-    rating = review_right_side_block.find_elements(By.CSS_SELECTOR, ".bui-review-score__badge")[0].text
+    rating = float(review_right_side_block.find_elements(By.CSS_SELECTOR, ".bui-review-score__badge")[0].text)
 
     reviews_pro_and_con = review_selenium_object.find_elements(By.CSS_SELECTOR, ".c-review__row")
     review_pro_text = None
