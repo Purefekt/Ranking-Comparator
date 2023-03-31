@@ -432,7 +432,7 @@ class Connector():
         return hotels
 
     def get_booking_hotels_urls_for_reviews(self):
-        sql = "select hotel_id, url from booking_hotels where url is not null and (flag_reviews is null or flag_reviews = 3) "
+        sql = "select hotel_id, url from booking_hotels where url is not null and flag_reviews is null "
 
         cursor = self.connection.cursor()
         cursor.execute(sql, [])
