@@ -1,12 +1,33 @@
 import traceback
 import undetected_chromedriver as uc
-from const import CHROME_VERSION, BOOKING_RAW_REVIEW_DIR
+from const import CHROME_VERSION
 from connector import get_connector
 import time
 from selenium.webdriver.common.by import By
 from datetime import datetime
-from utils import *
 import json
+from threading import Thread
+from queue import Queue
+
+
+class DownloadWorker(Thread):
+
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        while True:
+            # Get the work from the queue and expand the tuple
+            try:
+                param = self.queue.get()
+                try:
+                    save_page(param)
+                finally:
+                    self.queue.task_done()
+            except:
+                traceback.print_exc()
+                print('Error before processing')
 
 
 def get_review_data(review_selenium_object, hotel_id):
@@ -34,8 +55,16 @@ def get_review_data(review_selenium_object, hotel_id):
     }
 
     review_id = review_selenium_object.get_attribute("data-review-url")
-    reviewer_name = review_selenium_object.find_elements(By.CSS_SELECTOR, 'span.bui-avatar-block__title')[0].text
-    country_name = review_selenium_object.find_elements(By.CSS_SELECTOR, 'span.bui-avatar-block__subtitle')[0].text
+
+    reviewer_name = None
+    reviewer_name_element = review_selenium_object.find_elements(By.CSS_SELECTOR, 'span.bui-avatar-block__title')
+    if len(reviewer_name_element) > 0:
+        reviewer_name = reviewer_name_element[0].text
+
+    country_name = None
+    country_name_element = review_selenium_object.find_elements(By.CSS_SELECTOR, 'span.bui-avatar-block__subtitle')
+    if len(country_name_element) > 0:
+        country_name = country_name_element[0].text
 
     room_type = None
     room_type_id = None
@@ -54,8 +83,13 @@ def get_review_data(review_selenium_object, hotel_id):
     stay_month_year = datetime.strptime(stay_month_year, '%B %Y').replace(day=1)
     stay_month_year = stay_month_year.strftime('%Y-%m-%d')
 
-    traveller_type_info = review_selenium_object.find_elements(By.CSS_SELECTOR, 'ul.review-panel-wide__traveller_type')[0]
-    traveller_type = traveller_type_info.find_elements(By.CSS_SELECTOR, 'div.bui-list__body')[0].text
+    traveller_type_info = review_selenium_object.find_elements(By.CSS_SELECTOR, 'ul.review-panel-wide__traveller_type')
+    traveller_type = None
+    if len(traveller_type_info) > 0:
+        traveller_type_info = traveller_type_info[0]
+        traveller_type_element = traveller_type_info.find_elements(By.CSS_SELECTOR, 'div.bui-list__body')
+        if len(traveller_type_element) > 0:
+            traveller_type = traveller_type_element[0].text
 
     review_right_side_block = review_selenium_object.find_elements(By.CSS_SELECTOR, "div.c-review-block__right")[0]
     reviewers_choice = review_right_side_block.find_elements(By.CSS_SELECTOR, "span.c-review-block__badge__icon")
@@ -63,12 +97,24 @@ def get_review_data(review_selenium_object, hotel_id):
         reviewers_choice = True
     else:
         reviewers_choice = False
-    review_title = review_right_side_block.find_elements(By.CSS_SELECTOR, ".c-review-block__title")[0].text
-    review_date = review_right_side_block.find_elements(By.CSS_SELECTOR, ".c-review-block__date")[0].text
-    review_date = review_date.split(':')[1].strip()
-    review_date = datetime.strptime(review_date, '%B %d, %Y')
-    review_date = review_date.strftime('%Y-%m-%d')
-    rating = float(review_right_side_block.find_elements(By.CSS_SELECTOR, ".bui-review-score__badge")[0].text)
+
+    review_title = None
+    review_title_element = review_right_side_block.find_elements(By.CSS_SELECTOR, ".c-review-block__title")
+    if len(review_title_element) > 0:
+        review_title = review_title_element[0].text
+
+    review_date = None
+    review_date_element = review_right_side_block.find_elements(By.CSS_SELECTOR, ".c-review-block__date")
+    if len(review_date_element) > 0:
+        review_date = review_date_element[0].text
+        review_date = review_date.split(':')[1].strip()
+        review_date = datetime.strptime(review_date, '%B %d, %Y')
+        review_date = review_date.strftime('%Y-%m-%d')
+
+    rating = None
+    rating_element = review_right_side_block.find_elements(By.CSS_SELECTOR, ".bui-review-score__badge")
+    if len(rating_element) > 0:
+        rating = float(rating_element[0].text)
 
     reviews_pro_and_con = review_selenium_object.find_elements(By.CSS_SELECTOR, ".c-review__row")
     review_pro_text = None
@@ -188,8 +234,6 @@ def save_page(hotel):
         for review in first_page_reviews:
             ALL_REVIEWS.append(get_review_data(review, hotel[0]))
 
-        # send_raw_file(driver.page_source, BOOKING_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '_page1.html.gz')
-
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
         num_pages = 1
@@ -213,7 +257,6 @@ def save_page(hotel):
 
             next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
             num_pages += 1
-            # send_raw_file(driver.page_source, BOOKING_RAW_REVIEW_DIR + '1_TRY/', hotel[0] + '_page' + str(num_pages) +'.html.gz')
             print(f'        On page number -> {num_pages}')
         print(f'    Number of pages -> {num_pages}')
 
@@ -252,16 +295,33 @@ def save_page(hotel):
     finally:
         driver.close()
 
-# RUN
-con = get_connector()
-hotels = con.get_booking_hotels_urls_for_reviews()
-print("Number of hotels: " + str(len(hotels)))
 
-
-for hotel in hotels:
+def fetch_hotel_pages():
     try:
-        save_page(hotel)
+        queue = Queue()
+        # Create worker threads
+        for x in range(6):
+            worker = DownloadWorker(queue)
+            # Setting daemon to True will let the main thread exit even though the workers are blocking
+            worker.daemon = True
+            worker.start()
+        try:
+            con = get_connector()
+            hotels = con.get_booking_hotels_urls_for_reviews()
+            print("Number of Hotels: " + str(len(hotels)))
+        except Exception as e:
+            print("Initialization failed")
+            print(e)
+            return
+        finally:
+            con.close()
+        for h in hotels:
+            queue.put(h)
+        queue.join()
     except Exception as e:
-        print(e)
-        print('Crashed before processing hotel')
+        print("Error while running parallel threads")
+        traceback.print_exc()
 
+if __name__ == '__main__':
+    fetch_hotel_pages()
+    print('\a')
