@@ -184,13 +184,13 @@ class Connector():
     def enter_expedia_hotel_ranking(self, listing, rank, search_start_date, search_end_date, location, today):
         sql = 'INSERT INTO expedia_hotel_rankings ( run_date, search_start_date, search_end_date, rank, hotel_id, location, '\
             ' price, original_price, total_price, rating, comment, review_count, review_text, sponsored, amenities, badges, '\
-            ' full_text, access) SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
+            ' full_text, access, star_rating) SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s as tmp '
 
         val = [
             today, search_start_date, search_end_date, rank, listing['hotel_id'], location,
             listing['price'], listing['original_price'], listing['total_price'], listing['rating'], listing['comment'],
             listing['review_count'], listing['full_review'], listing['sponsored'], str(listing['amenities']),
-            str(listing['badges']), listing['full_text'], listing['vip_access']
+            str(listing['badges']), listing['full_text'], listing['vip_access'], listing['stars_rating']
         ]
 
         self.connection.cursor().execute(sql, val)

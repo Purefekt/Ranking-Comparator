@@ -114,6 +114,7 @@ def scrape(loc, start_date, end_date, today):
 				total_price_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-1.uitk-layout-grid-item-justify-self-end > div > div > div:nth-child(2) > div")
 				price_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-1.uitk-layout-grid-item-justify-self-end > div > div > div:nth-child(1) > div > span")
 				old_price_element = li.find_elements(By.CSS_SELECTOR, "li > div > div > div.uitk-card-content-section.uitk-card-content-section-padded.uitk-layout-grid-item.listing-content.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-2 > div > div.uitk-layout-grid.uitk-layout-grid-align-content-end.uitk-layout-grid-columns-3.uitk-layout-flex-item.uitk-layout-flex-item-flex-grow-1 > div.uitk-layout-grid-item.uitk-layout-grid-item-align-self-end.uitk-layout-grid-item-columnspan.uitk-layout-grid-item-columnspan-1.uitk-layout-grid-item-justify-self-end > div > div > div:nth-child(1) > button > div > div > del > span")
+				stars_rating_element = li.find_elements(By.CSS_SELECTOR, 'div.uitk-rating')
 
 				info_array = li.text.splitlines()
 
@@ -151,7 +152,8 @@ def scrape(loc, start_date, end_date, today):
 					'sponsored': False,
 					'vip_access': None,
 					'url': None,
-					'amenities': None
+					'amenities': None,
+					'stars_rating': None
 				}
 
 				# Name of the hotel
@@ -258,6 +260,10 @@ def scrape(loc, start_date, end_date, today):
 
 				key = (listing['name'] + " " + loc[0] + " " + str(listing['nbh'])).encode()
 				listing['hotel_id'] = hashlib.md5(key).hexdigest()
+
+				if len(stars_rating_element) > 0:
+					stars_rating = str(stars_rating_element[0].text.split(' ')[0])
+					listing['stars_rating'] = stars_rating
 
 				logger.info("RANK " + str(i) + " " + listing['name'])
 				print("RANK " + str(i) + " " + listing['name'])

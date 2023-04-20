@@ -1,6 +1,6 @@
 import traceback
 import undetected_chromedriver as uc
-from const import CHROME_VERSION
+from const import CHROME_VERSION, BOOKING_RAW_REVIEW_DIR
 from connector import get_connector
 import time
 from selenium.webdriver.common.by import By
@@ -230,15 +230,17 @@ def save_page(hotel):
         for button in continue_reading_button:
             button.click()
 
+        num_pages = 1
         # get all reviews on page1
         for review in first_page_reviews:
             ALL_REVIEWS.append(get_review_data(review, hotel[0]))
 
         # move to the 2nd page and get all the reviews. Repeat this till next page exists
         next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
-        num_pages = 1
+
 
         while next_page_button:
+            num_pages += 1
             # scroll to the bottom and press the next page button if it exists. For each page get all reviews info
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight * 0.5);")
             time.sleep(0.5)
@@ -256,7 +258,7 @@ def save_page(hotel):
                 ALL_REVIEWS.append(get_review_data(review, hotel[0]))
 
             next_page_button = driver.find_elements(By.CSS_SELECTOR, 'a.pagenext')
-            num_pages += 1
+
             print(f'        On page number -> {num_pages}')
         print(f'    Number of pages -> {num_pages}')
 

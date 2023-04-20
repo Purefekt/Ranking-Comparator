@@ -46,6 +46,7 @@ def save_raw_file(content, dir, name):
 	finally:
 		f.close
 
+
 def remote_command(cmd):
 	return run(cmd)
 
